@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <title><%=typeof title == 'undefined' ? Grapher : title%></title>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" \>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" \>
+    <meta http-equiv="Content-Language" content="en-US" \>
+    <meta name="author" content="Resbou" \>
+    <meta name="description" content="Resbou Rentals" \>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"\>
+        
+    <% if ((typeof addcss != "undefined") && ( addcss.length)) { for (i in addcss) { %>
+    <link rel="stylesheet" href="<%= prefix(addcss[i]) + '.css' %>" />
+    <% }} %>
+  </head>
+    
+<body><%- body %></body>
+    
+  <% if ((typeof state != "undefined")) { %>
+  <script type="text/javascript">
+    window.state = <%- JSON.stringify(state) %>
+  </script>
+  <% } %>
+
+  <% if ((typeof addjs != "undefined") && ( addjs.length)) { for (i in addjs) { %>
+  <script type="text/javascript" src="<%= prefix(addjs[i]) + '.js' %>"></script>
+  <% }} %>
+  
+</html>
+

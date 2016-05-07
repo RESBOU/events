@@ -1,7 +1,6 @@
 require! {
   assert
   util
-  request
   
   bluebird: p
   leshdash: { head, rpad, lazy, union, assign, omit, map, curry, times, keys, first, wait }
@@ -12,7 +11,7 @@ require! {
   'moment-range'
 
   '../index': events
-  './eventGrapher'
+  './grapher/clientside.ls': eventGrapher
 }
 
 xspecify = -> true
@@ -73,7 +72,7 @@ describe 'events', ->
 
   specify 'serializeOne', -> new p (resolve,reject) ~>
     expect @event1.serialize()
-    .to.deep.equal { id: "event1", start: '2016-04-01T22:00:00+00:00', end: '2016-04-03T22:00:00+00:00', price: 300 }
+    .to.deep.equal { id: "event1", start: '2016-04-01 22:00:00', end: '2016-04-03 22:00:00', price: 300 }
     resolve!
 
   specify 'serializeMany', -> new p (resolve,reject) ~>
@@ -101,8 +100,8 @@ describe 'events', ->
       [ {
         type: 'price',
         id: 'ea1',
-        start: '2016-03-31T22:00:00+00:00',
-        end: '2016-04-05T22:00:00+00:00',
+        start: '2016-03-31 22:00:00',
+        end: '2016-04-05 22:00:00',
         price: 100 } ]
 
     filterQuery2 = new events.Event start: @start.clone().subtract(1,'days'), end: @start.clone().add(8, 'days')
@@ -112,13 +111,13 @@ describe 'events', ->
     .to.deep.equal do
       [ { type: 'price',
       id: 'ea1',
-      start: '2016-03-31T22:00:00+00:00',
-      end: '2016-04-05T22:00:00+00:00',
+      start: '2016-03-31 22:00:00',
+      end: '2016-04-05 22:00:00',
       price: 100 },
       { type: 'price',
       id: 'ea2',
-      start: '2016-04-05T22:00:00+00:00',
-      end: '2016-04-10T22:00:00+00:00',
+      start: '2016-04-05 22:00:00',
+      end: '2016-04-10 22:00:00',
       price: 125 } ]
 
     filterQuery3 = new events.Event start: @start.clone().add(1,'days'), end: @start.clone().add(17, 'days')
@@ -128,18 +127,18 @@ describe 'events', ->
     .to.deep.equal do
       [ { type: 'price',
       id: 'ea1',
-      start: '2016-03-31T22:00:00+00:00',
-      end: '2016-04-05T22:00:00+00:00',
+      start: '2016-03-31 22:00:00',
+      end: '2016-04-05 22:00:00',
       price: 100 },
       { type: 'price',
       id: 'ea2',
-      start: '2016-04-05T22:00:00+00:00',
-      end: '2016-04-10T22:00:00+00:00',
+      start: '2016-04-05 22:00:00',
+      end: '2016-04-10 22:00:00',
       price: 125 },
       { type: 'price',
       id: 'ea3',
-      start: '2016-04-10T22:00:00+00:00',
-      end: '2016-04-15T22:00:00+00:00',
+      start: '2016-04-10 22:00:00',
+      end: '2016-04-15 22:00:00',
       price: 150 } ]
 
     eventGrapher.drawEvents 'filter', @events, filterQuery1, res1, filterQuery2, res2, filterQuery3, res3
@@ -167,29 +166,29 @@ describe 'events', ->
       [ {
         type: 'price',
         id: 'ea1-split',
-        start: '2016-04-02T22:00:00+00:00',
-        end: '2016-04-07T22:00:00+00:00',
+        start: '2016-04-02 22:00:00',
+        end: '2016-04-07 22:00:00',
         price: 100
       }
       {
         type: 'price',
         id: 'ea2-split1',
-        start: '2016-04-07T22:00:00+00:00',
-        end: '2016-04-10T10:00:00+00:00',
+        start: '2016-04-07 22:00:00',
+        end: '2016-04-10 10:00:00',
         price: 125
       },
       {
         type: 'price',
         id: 'ea2-split2',
-        start: '2016-04-10T10:00:00+00:00',
-        end: '2016-04-12T22:00:00+00:00',
+        start: '2016-04-10 10:00:00',
+        end: '2016-04-12 22:00:00',
         price: 125
       }
       {
         type: 'price',
         id: 'ea3-split',
-        start: '2016-04-12T22:00:00+00:00',
-        end: '2016-04-17T22:00:00+00:00',
+        start: '2016-04-12 22:00:00',
+        end: '2016-04-17 22:00:00',
         price: 150
       } ]
 
@@ -289,8 +288,8 @@ describe 'events', ->
     expect res.serialize()
     .to.deep.equal do
        [ { id: 'event1-0',
-       start: '2016-04-01T22:00:00+00:00',
-       end: '2016-04-02T22:00:00+00:00',
+       start: '2016-04-01 22:00:00',
+       end: '2016-04-02 22:00:00',
        price: 300 } ]
     
   specify 'subOne2Many', -> new p (resolve,reject) ~>
@@ -322,12 +321,12 @@ describe 'events', ->
     expect res.serialize!
     .to.deep.equal do
       [ { id: 'target-0-0',
-      start: '2016-03-31T22:00:00+00:00',
-      end: '2016-04-01T22:00:00+00:00',
+      start: '2016-03-31 22:00:00',
+      end: '2016-04-01 22:00:00',
       price: 300 },
       { id: 'target-1-0',
-      start: '2016-04-03T22:00:00+00:00',
-      end: '2016-04-07T22:00:00+00:00',
+      start: '2016-04-03 22:00:00',
+      end: '2016-04-07 22:00:00',
       price: 300 } ]
     
     
@@ -373,20 +372,20 @@ describe 'events', ->
     expect res.serialize!
     .to.deep.equal do
       [ { id: 'target1-0',
-      start: '2016-03-31T22:00:00+00:00',
-      end: '2016-04-01T22:00:00+00:00',
+      start: '2016-03-31 22:00:00',
+      end: '2016-04-01 22:00:00',
       price: 150 },
       { id: 'target1-1',
-      start: '2016-04-03T22:00:00+00:00',
-      end: '2016-04-04T22:00:00+00:00',
+      start: '2016-04-03 22:00:00',
+      end: '2016-04-04 22:00:00',
       price: 150 },
       { id: 'target2-0',
-      start: '2016-04-05T22:00:00+00:00',
-      end: '2016-04-07T22:00:00+00:00',
+      start: '2016-04-05 22:00:00',
+      end: '2016-04-07 22:00:00',
       price: 200 },
       { id: 'target3',
-      start: '2016-04-14T22:00:00+00:00',
-      end: '2016-04-15T22:00:00+00:00',
+      start: '2016-04-14 22:00:00',
+      end: '2016-04-15 22:00:00',
       price: 200 } ]
     
     

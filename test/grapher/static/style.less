@@ -1,0 +1,86 @@
+//@import "Font-Awesome/less/font-awesome.less";
+//@fa-font-path: "/fonts";
+
+@import (less) "../node_modules/purecss/build/pure.css";
+@import (less) "../node_modules/purecss/build/grids-responsive.css";
+
+body {
+    font-family: monospace;
+    box-sizing: border-box;
+}
+
+.axis text {
+    font: .75em monospace;
+}
+
+svg {
+    padding: 2em;
+    padding-top: 3em;
+}
+
+.availiableGraphs {
+    padding: 2em;
+    font-size: .75em;
+    a {
+        display: inline-block;
+    }
+}
+
+
+div.json {
+    box-sizing: border-box;
+    padding-left: 2em;
+}
+
+pre.json {
+    padding: 1em 2em;
+    margin: 2em;
+    background-color: ghostwhite;
+    border: 1px solid silver;
+    
+    .json-key {
+        color: brown;
+    }
+    
+    .json-value {
+        color: navy;
+    }
+    
+    .json-string {
+        color: olive;
+    }   
+}
+
+.title {
+    margin: 2em;
+    font-size: 1.25em;
+    font-weight: bold;
+    position: absolute;
+}
+
+.eventBarText {
+    dx: 1em;
+    fill: white;
+    font: .75em monospace;
+}
+
+.eventBar {
+    stroke:black;
+    stroke-width:1;
+    stroke-opacity: .5;
+    opacity: .75;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: silver;
+}
+
+.availiableGraphs {
+    a {
+        text-decoration: none;
+        font-size: 1.25em;
+        margin: .5em;
+    }
+}
