@@ -1,7 +1,7 @@
 # * require
 require! {
   bluebird: p
-  leshdash: { w, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues }
+  leshdash: { w, find, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues }
   
   moment
   'moment-range'
@@ -36,7 +36,8 @@ resolveEventArray = ->
         
 # ( Events | Event | void ) -> Range
 resolveRange = (something) ->
-  switch something@@
+  switch something?@@
+    | false => void
     | Object => new moment.range something
     | Array => new moment.range Array
     | Event => something.range!
@@ -247,8 +248,16 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
     if range then events = @_rangeSearch range
     else events = values @events
 
-    ret.pushm events      
+    checkPattern = (pattern) ->
+      (event) ->
+        not find pattern, (value, key) ->
+          if value is true then return not event[key]?
+          else
+            if event[key] is value then return false else return true
+
+    ret.pushm filter events, checkPattern pattern
     ret
+
         
   pushm: (...events) ->
     each resolveEventArray(events), (event) ~>
@@ -280,7 +289,17 @@ class MemEventsTree
       events = map search, ~> @events[it.id]
     else events = values @events
 
-    ret.pushm events      
+    checkPattern = (pattern) ->
+      console.log 'checkpattern', pattern
+      (event) ->
+        console.log 'checkevent', pattern
+        find pattern, (value, key) ->
+          if value is true
+            if event[value] then false else true
+          else
+            if event[value]? is value then false else true
+
+    ret.pushm filter events, checkPattern pattern
     ret
         
   pushm: (...events) ->
