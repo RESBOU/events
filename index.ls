@@ -10,6 +10,8 @@ require! {
 
 # * Type transformers
 # quick type conversions for a more comfy API
+
+format = exports.format = -> it.format('YYYY-MM-DD')
  
 # (any) -> Event | Error
 resolveEvent = ->
@@ -107,7 +109,9 @@ Event = exports.Event = class Event extends EventLike
 
   # () -> String
   toString: ->
-    if @price then "Price(" + @price + ")"
+    start = format @start
+    end = format @end
+    if @price then "Price(" + @price + " " + start + ")"
     else "Event(" + @id + ")"
 
   # () -> moment.range

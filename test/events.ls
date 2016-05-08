@@ -11,7 +11,7 @@ require! {
   'moment-range'
 
   '../index': events
-  './grapher/clientside.ls': eventGrapher
+  './grapher/client': eventGrapher
 }
 
 xspecify = -> true
