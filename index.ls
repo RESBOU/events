@@ -1,7 +1,7 @@
 # * require
 require! {
   bluebird: p
-  leshdash: { w, find, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues }
+  leshdash: { w, find, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues, omit }
   
   moment
   'moment-range'
@@ -193,8 +193,8 @@ Events = exports.Events = class Events extends EventLike
   # ( { range: Range, ... } ) -> Events
   filter: (pattern) ->
     @_filter do
-      parse.range pop pattern, 'range'
-      pattern
+      parse.range pattern.range
+      omit pattern, 'range'
 
   # ( Events ) -> Events
   updatePrice: (priceData) ->
@@ -253,7 +253,7 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
           if value is true then return not event[key]?
           else
             if event[key] is value then return false else return true
-
+              
     ret.pushm filter events, checkPattern pattern
     ret
 
