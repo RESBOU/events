@@ -5,52 +5,52 @@ require! {
   
   moment
   'moment-range'
-  'interval-tree2': Tree
 }
 
 # * Type transformers
 # quick type conversions for a more comfy API
 
 format = exports.format = -> it.format('YYYY-MM-DD')
- 
-# (any) -> Event | Error
-resolveEvent = ->
-  switch it@@
-    | Event => it
-    | Object => new Event it
-    | otherwise => throw new Error "invalid type for event #{it@@}"
 
-# (any) -> MemEvents | Error
-resolveEvents = ->
-  if it instanceof Events then return it
-  switch it@@
-    | Array => new MemEvents it
-    | otherwise => new MemEvents resolveEvent it
+parse = do 
+  # (any) -> Event | Error
+  event: ->
+    switch it@@
+      | Event => it
+      | Object => new Event it
+      | otherwise => throw new Error "invalid type for event #{it@@}"
 
-# (Any) -> Array<Event> | Error
-resolveEventArray = ->
-  flattenDeep switch it@@
-    | Array => map it, resolveEventArray
-    | MemEvents => it.toArray()
-    | otherwise => [ resolveEvent it ]
+  # (any) -> MemEvents | Error
+  events: ->
+    if it instanceof Events then return it
+    switch it@@
+      | Array => new MemEvents it
+      | otherwise => new MemEvents parse.event it
+
+  # (Any) -> Array<Event> | Error
+  eventArray: ->
+    flattenDeep switch it@@
+      | Array => map it, parse.eventArray
+      | MemEvents => it.toArray()
+      | otherwise => [ parse.event it ]
         
-# ( Events | Event | void ) -> Range
-resolveRange = (something) ->
-  switch something?@@
-    | false => void
-    | Object => new moment.range something
-    | Array => new moment.range Array
-    | Event => something.range!
-    | otherwise => something
+  # ( Events | Event | void ) -> Range
+  range: (something) ->
+    switch something?@@
+      | false => void
+      | Object => new moment.range something
+      | Array => new moment.range Array
+      | Event => something.range!
+      | otherwise => something
     
 # ( Events | Array<Event> | Event | void ) -> Array<Event>
-resolveEventCollection = (something) ->
-  switch something?@@
-    | void => []
-    | Event => [ Event ]
-    | Events => Events.toArray()
-    | Array => flattenDeep something
-    | otherwise => throw 'what is this'
+  eventCollection: (something) ->
+    switch something?@@
+      | void => []
+      | Event => [ Event ]
+      | Events => Events.toArray()
+      | Array => flattenDeep something
+      | otherwise => throw 'what is this'
 
 # * EventLike
 # more of a spec then anything, this is implemented by Event & Events
@@ -59,7 +59,7 @@ resolveEventCollection = (something) ->
 EventLike = exports.EventLike = class EventLike
   # ( Events ) -> Events
   relevantEvents: (events) ->
-    resolveEvents events
+    parse.events events
       .filter range: @
       
   # ( EventLike ) -> Events
@@ -193,7 +193,7 @@ Events = exports.Events = class Events extends EventLike
   # ( { range: Range, ... } ) -> Events
   filter: (pattern) ->
     @_filter do
-      resolveRange pop pattern, 'range'
+      parse.range pop pattern, 'range'
       pattern
 
   # ( Events ) -> Events
@@ -226,7 +226,6 @@ Events = exports.Events = class Events extends EventLike
             
 # * MemEvents
 # In memory Events implementation, using range tree data structure for fast search
-#
 MemEvents = exports.MemEvents = class MemEventsNaive extends Events
   ->
     assign @, do
@@ -260,53 +259,10 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
 
         
   pushm: (...events) ->
-    each resolveEventArray(events), (event) ~>
+    each parse.eventArray(events), (event) ~>
       if not event then return
       if @events[event.id]? then return
       @events[event.id] = event
       @length++
     @
   
-
-class MemEventsTree
-  ->
-    assign @, do
-      tree: new Tree new Date!getTime!
-      events:  {}
-      length: 0
-      
-    super ...
-    
-  toArray: -> values @events
-
-  _each: (cb) -> each @events, cb
-
-  _filter: (range, pattern) ->
-    ret = new MemEvents()
-    
-    if range
-      search = @tree.rangeSearch range.start.unix!, range.end.unix!
-      events = map search, ~> @events[it.id]
-    else events = values @events
-
-    checkPattern = (pattern) ->
-      console.log 'checkpattern', pattern
-      (event) ->
-        console.log 'checkevent', pattern
-        find pattern, (value, key) ->
-          if value is true
-            if event[value] then false else true
-          else
-            if event[value]? is value then false else true
-
-    ret.pushm filter events, checkPattern pattern
-    ret
-        
-  pushm: (...events) ->
-    each resolveEventArray(events), (event) ~>
-      if not event then return
-      if @events[event.id]? then return
-      @tree.add event.start.unix!, event.end.unix!, event.id
-      @events[event.id] = event
-      @length++
-    @
