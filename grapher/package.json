@@ -30,13 +30,14 @@
     "options": "0.0.6",
     "purecss": "^0.6.0",
     "react": "^15.0.1",
+    "request": "^2.72.0",
+    "ribcage": "git://github.com/leshy/ribcage.git",
+    "ribcage_express4": "git://github.com/leshy/ribcage_express4.git",
+    "ribcage_logger": "git://github.com/leshy/ribcage_logger.git",
     "socket.io": "^1.4.5",
     "socket.io-client": "^1.4.5",
     "ultron": "^1.0.2",
-    "zepto-browserify": "^1.1.6-1",
-    "ribcage": "git://github.com/leshy/ribcage.git",
-    "ribcage_express4": "git://github.com/leshy/ribcage_express4.git",
-    "ribcage_logger": "git://github.com/leshy/ribcage_logger.git"
+    "zepto-browserify": "^1.1.6-1"
   },
   "devDependencies": {
     "babelify": "^7.2.0",
