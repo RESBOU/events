@@ -12,7 +12,7 @@ require! {
 
 format = exports.format = -> it.format('YYYY-MM-DD')
 
-parse = do 
+parse = exports.parse = do 
   # (any) -> Event | Error
   event: ->
     switch it@@
@@ -106,7 +106,7 @@ Event = exports.Event = class Event extends EventLike
 
   # () -> Json
   serialize: ->
-    assign {}, @, mapValues (pick @, [ 'start', 'end' ]), (value) -> value.utc().format("YYYY-MM-DD HH:mm:ss")
+    assign {}, @, mapValues (pick @, <[ start end ]>), (value) -> value.utc().format("YYYY-MM-DD HH:mm:ss")
 
   # () -> String
   toString: ->

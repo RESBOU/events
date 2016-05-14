@@ -11,7 +11,7 @@ require! {
   'moment-range'
 
   '../index': events
-  './grapher/client': eventGrapher
+  '../grapher/client': eventGrapher
 }
 
 xspecify = -> true
@@ -36,7 +36,7 @@ describe 'events', ->
     eventArray.push assign {}, e,
       id: 'ea2'
       start: start.clone().add 5, 'days'
-      end: start.clone().add 10, 'days'
+      end: start.clone().add 10, 'days' e
       price: 125
 
     eventArray.push assign {}, e,

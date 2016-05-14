@@ -2,7 +2,7 @@ require! {
   bluebird: p
   leshdash: { flatten, each, head, rpad, lazy, union, assign, omit, map, curry, times, keys, first, wait }
   request
-  '../../index': events
+  '../index': events
 }
 
 module.exports = do
