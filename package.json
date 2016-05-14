@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha --compilers ls:LiveScript test/events.ls"
+    "test": "mocha --compilers ls:LiveScript test/events.ls",
+    "grapher": "lsc grapher/serverside.ls"
   },
   "repository": {
     "type": "git",
