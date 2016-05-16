@@ -35,9 +35,9 @@ parse = exports.parse = do
       | otherwise => [ parse.event it ]
         
   # ( Events | Event | void ) -> Range
-  range: (something) ->
+  range: (something, def) ->
     switch something?@@
-      | false => void
+      | false => def or void
       | Object => new moment.range something
       | Array => new moment.range Array
       | Event => something.range!
@@ -101,12 +101,12 @@ parseInit = (data) ->
 Event = exports.Event = class Event extends EventLike
   (init) -> assign @, parseInit init
 
-  clone: (data) ->
-    new Event assign {}, @, { id: @id + '-split'}, parseInit data
+  clone: (data={}) ->
+    new Event assign {}, @, { id: @id + '-clone'}, data
 
   # () -> Json
   serialize: ->
-    assign {}, @, mapValues (pick @, <[ start end ]>), (value) -> value.utc().format("YYYY-MM-DD HH:mm:ss")
+    assign {}, @, mapValues (pick @, <[ start end ]>), (value) -> value.utc().format "YYYY-MM-DD HH:mm:ss"
 
   # () -> String
   toString: ->
@@ -135,7 +135,7 @@ Event = exports.Event = class Event extends EventLike
   # ( Events, (Event, Event) -> Events ) -> Events
   collide: (events, cb) ->
     @relevantEvents events
-      .reduce (events, event) ~> events.pushm cb event, @
+    .reduce (events, event) ~> events.pushm cb event, @
 
   each: (cb) -> cb @
 
@@ -256,7 +256,6 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
               
     ret.pushm filter events, checkPattern pattern
     ret
-
         
   pushm: (...events) ->
     each parse.eventArray(events), (event) ~>

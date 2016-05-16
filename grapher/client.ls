@@ -11,8 +11,9 @@ module.exports = do
     req = flatten map data, (something, index) ->
       map do
         switch something@@
+          | Array => map something, (.serialize!)
           | events.Event => [ something.serialize! ]
           | events.MemEvents => something.serialize!
-          | otherwise => throw new Error 'wut wut'
+          | otherwise => something.serialize!
         -> assign it, { layer: index }
     request.post 'http://localhost:3002/add', { json: { id: title, data: req, type: 'eventlayers' } }, -> resolve!

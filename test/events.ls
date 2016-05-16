@@ -165,7 +165,7 @@ describe 'events', ->
     .to.deep.equal do
       [ {
         type: 'price',
-        id: 'ea1-split',
+        id: 'ea1-clone',
         start: '2016-04-02 22:00:00',
         end: '2016-04-07 22:00:00',
         price: 100
@@ -186,7 +186,7 @@ describe 'events', ->
       }
       {
         type: 'price',
-        id: 'ea3-split',
+        id: 'ea3-clone',
         start: '2016-04-12 22:00:00',
         end: '2016-04-17 22:00:00',
         price: 150
