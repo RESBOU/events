@@ -121,9 +121,9 @@ Event = exports.Event = class Event extends EventLike
   # ( Events ) -> Events
   subtractMany: (events) ->
     @relevantEvents events
-      .reduce do
-        (memo, event) ~> memo.subtract event
-        new MemEvents @
+    .reduce do
+      (res, event) ~> res.subtractOne event
+      new MemEvents @
       
   # ( Event ) -> Events
   subtractOne: (event) ->
@@ -223,7 +223,8 @@ Events = exports.Events = class Events extends EventLike
   # ( Events ) -> Events
   subtractMany: (events) ->
     @reduce (ret, child) -> ret.pushm child.subtractMany events
-            
+
+  
 # * MemEvents
 # In memory Events implementation, using range tree data structure for fast search
 MemEvents = exports.MemEvents = class MemEventsNaive extends Events
