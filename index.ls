@@ -7,8 +7,7 @@ require! {
   'moment-range'
 }
 
-# * Type transformers
-# quick type conversions for a more comfy API
+# * Type coercion functions for a more chilled out API
 
 format = exports.format = -> it.format('YYYY-MM-DD')
 
@@ -60,8 +59,8 @@ EventLike = exports.EventLike = class EventLike
   # ( Events ) -> Events
   relevantEvents: (events) ->
     parse.events events
-      .filter range: @
-      
+    .filter range: @
+
   # ( EventLike ) -> Events
   push: (event) -> ...
   
@@ -115,8 +114,16 @@ Event = exports.Event = class Event extends EventLike
     if @price then "Price(" + @price + " " + start + ")"
     else "Event(" + @id + ")"
 
-  # () -> moment.range
-  range: -> new moment.range @start, @end 
+  # get or set range
+  # (range?) -> moment.range
+  range: (setRange) ->
+    if range = setRange
+      @start = range.start.clone()
+      @end = range.end.clone()
+    else
+      range = new moment.range @start, @end
+      
+    return range
     
   # ( Events ) -> Events
   subtractMany: (events) ->
@@ -197,15 +204,21 @@ Events = exports.Events = class Events extends EventLike
       omit pattern, 'range'
 
   # ( Events ) -> Events
-  updatePrice: (priceData) ->
-    @collide priceData, (event1, event2) ->
-#      if event1.price is event2.price
-#        event2.subtract event1
-#        .pushm event1
-#      else
-        event1.subtract event2
-        .pushm event2
+  updatePrice: (priceData) ->    
+    parse.events priceData
+    .reduce (res, event) ~>
 
+      targets = event.relevantEvents @
+      
+      if not targets.length then return res.pushm event
+      res.pushm targets.collide event, (event1, event2) ->
+        if event1.price is event2.price
+          event1.range event1.range!add event2.range!
+          res.pushm event1
+        else
+          res.pushm [ event1, event2.subtract(event1) ]
+          
+      
   # ( Events ) -> Events
   union: (events) ->
     res = @clone()
@@ -226,7 +239,12 @@ Events = exports.Events = class Events extends EventLike
 
   
 # * MemEvents
-# In memory Events implementation, using range tree data structure for fast search
+# In memory Event collection implementation,
+# this is a very naive implementation
+# 
+# I guess we should use range tree data structure or something smart like that for fast range search in the future.
+# its good enough for now even if we end up quadratic complexity for algos, we are not parsing many events per property.
+# 
 MemEvents = exports.MemEvents = class MemEventsNaive extends Events
   ->
     assign @, do

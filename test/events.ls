@@ -70,6 +70,7 @@ describe 'events', ->
       
     resolve!
 
+    
   specify 'serializeOne', -> new p (resolve,reject) ~>
     expect @event1.serialize()
     .to.deep.equal { id: "event1", start: '2016-04-01 22:00:00', end: '2016-04-03 22:00:00', price: 300 }
@@ -144,8 +145,22 @@ describe 'events', ->
     eventGrapher.drawEvents 'filter', @events, filterQuery1, res1, filterQuery2, res2, filterQuery3, res3
     resolve!
         
-  specify 'reduce', -> new p (resolve,reject) ~>
     
+  specify 'updatePrice', -> new p (resolve,reject) ~>
+
+    dummy = new events.Event do
+      id: 'eventdummy2'
+      start: @start.clone().add 8, 'days'
+      end: @start.clone().add 12, 'days'
+      price: 125
+      type: 'price'
+
+    dummyes = new events.MemEvents [@event1, dummy ]
+    
+    eventGrapher.drawEvents 'updatePrice', @events, dummyes, @events.updatePrice dummyes
+    resolve!
+    
+  specify 'reduce', -> new p (resolve,reject) ~>
     res = @events.reduce (events, event) ->
       range = event.range!
       range.start.add '2', 'days'
@@ -220,7 +235,8 @@ describe 'events', ->
     eventGrapher.drawEvents 'collideOne', crashDummy, @events, res1, res2, res3
     
     resolve!
-
+    
+    
   specify 'collideMany', -> new p (resolve,reject) ~>
     crashDummys1 = new events.MemEvents do
       new events.Event do
@@ -328,6 +344,8 @@ describe 'events', ->
       start: '2016-04-03 22:00:00',
       end: '2016-04-07 22:00:00',
       price: 300 } ]
+
+
     
     
   specify 'subMany2Many', -> new p (resolve,reject) ~>
