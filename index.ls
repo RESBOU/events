@@ -56,10 +56,12 @@ parse = exports.parse = do
 # 
 
 EventLike = exports.EventLike = class EventLike
+
+  # fetches all events from a collection relevant to current event (by type and range)
   # ( Events ) -> Events
   relevantEvents: (events) ->
     parse.events events
-    .filter range: @
+    .filter range: @ #, type: @type ## TODO
 
   # ( EventLike ) -> Events
   push: (event) -> ...
@@ -211,14 +213,35 @@ Events = exports.Events = class Events extends EventLike
       targets = event.relevantEvents @
       
       if not targets.length then return res.pushm event
+        
       res.pushm targets.collide event, (event1, event2) ->
         if event1.price is event2.price
-          event1.range event1.range!add event2.range!
-          res.pushm event1
+          res.pushm event2.clone range: event1.range!add event2.range!
         else
           res.pushm [ event1, event2.subtract(event1) ]
+
+
+  update: (events) ->
+    
+    res = new MemEvents()
+
+    @filter range: events
+    
+    .map (event) ~> 
+      collisions = event.relevantEvents events
+      if not collisions.length then event.markDelete!
+      else
+        map collisions, (collision) ->
           
-      
+      res.pushm @collide event, (oldEvent, newEvent) ->
+        if newEvent.type isnt oldEvent.type then return
+        if oldEvent.equals newEvent then return
+        
+        # need update
+        [ oldEvent.markRemove!, newEvent ]
+        
+        
+          
   # ( Events ) -> Events
   union: (events) ->
     res = @clone()
@@ -250,6 +273,7 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
     assign @, do
       events:  {}
       length: 0
+      type: {}
     super ...
     
   toArray: -> values @events
@@ -281,6 +305,7 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
       if not event then return
       if @events[event.id]? then return
       @events[event.id] = event
+      @type[event.type] = true
       @length++
     @
   
