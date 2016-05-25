@@ -9,12 +9,12 @@ require! {
 
 # * Type coercion functions for a more chilled out API
 
-format = exports.format = -> it.format('YYYY-MM-DD')
+format = exports.format = -> it.format 'YYYY-MM-DD'
 
 parse = exports.parse = do 
   # (any) -> Event | Error
   event: ->
-    switch it@@
+    switch it?@@
       | Event => it
       | Object => new Event it
       | otherwise => throw new Error "invalid type for event #{it@@}"
@@ -22,13 +22,13 @@ parse = exports.parse = do
   # (any) -> MemEvents | Error
   events: ->
     if it instanceof Events then return it
-    switch it@@
+    switch it?@@
       | Array => new MemEvents it
       | otherwise => new MemEvents parse.event it
 
   # (Any) -> Array<Event> | Error
   eventArray: ->
-    flattenDeep switch it@@
+    flattenDeep switch it?@@
       | Array => map it, parse.eventArray
       | MemEvents => it.toArray()
       | otherwise => [ parse.event it ]
@@ -40,6 +40,7 @@ parse = exports.parse = do
       | Object => new moment.range something
       | Array => new moment.range Array
       | Event => something.range!
+      | MemEvents => something.range!
       | otherwise => something
     
 # ( Events | Array<Event> | Event | void ) -> Array<Event>
@@ -62,6 +63,7 @@ EventLike = exports.EventLike = class EventLike
   relevantEvents: (events) ->
     parse.events events
     .filter range: @ #, type: @type ## TODO
+
 
   # ( EventLike ) -> Events
   push: (event) -> ...
@@ -102,6 +104,20 @@ parseInit = (data) ->
 Event = exports.Event = class Event extends EventLike
   (init) -> assign @, parseInit init
 
+  compare: (event) ->
+    [ @isSameRange(event), @isSamePayload(event) ]
+
+  isSame: (event) ->
+    @isSameRange(event) and @isSamePayload(event)
+
+  isSameRange: (event) ->
+    event = parse.event event
+    @range!.isSame event.range!
+    
+  isSamePayload: (event) ->
+    event = parse.event event
+    @payload is event.payload
+  
   clone: (data={}) ->
     new Event assign {}, @, { id: @id + '-clone'}, data
 
@@ -188,7 +204,7 @@ Events = exports.Events = class Events extends EventLike
     ret = []
     @each (event) -> ret.push cb event
     ret
-    
+            
   # ( (Events, Event) -> Events ) -> Array<any>
   rawReduce: (cb, memo) ->
     @each (event) -> memo := cb memo, event
@@ -220,26 +236,35 @@ Events = exports.Events = class Events extends EventLike
         else
           res.pushm [ event1, event2.subtract(event1) ]
 
-
-  update: (events) ->
+  diff: (events) ->    
+    diff = new MemEvents()
     
-    res = new MemEvents()
-
-    @filter range: events
-    
-    .map (event) ~> 
+    @map (event) ~>
       collisions = event.relevantEvents events
-      if not collisions.length then event.markDelete!
+      console.log "collide", event.id
+      
+      if not collisions.length
+        
+        update = event.clone id: event.id + "-del"
+        update.markDelete!
+        diff.pushm update
+        
       else
-        map collisions, (collision) ->
+      
+        diff.pushm collisions.map (eNew) ->
+          [ range, payload ] = event.compare eNew
           
-      res.pushm @collide event, (oldEvent, newEvent) ->
-        if newEvent.type isnt oldEvent.type then return
-        if oldEvent.equals newEvent then return
-        
-        # need update
-        [ oldEvent.markRemove!, newEvent ]
-        
+          console.log event.id, eNew.id, range,payload
+          
+          if range and payload then return void
+          if payload
+            console.log 'sub'
+            return eNew.subtract event
+          else
+            console.log 'payload diff', eNew.id
+            return eNew
+            
+    diff        
         
           
   # ( Events ) -> Events
@@ -299,13 +324,19 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
               
     ret.pushm filter events, checkPattern pattern
     ret
-        
+
+  range: -> @_range
+                        
   pushm: (...events) ->
     each parse.eventArray(events), (event) ~>
       if not event then return
       if @events[event.id]? then return
       @events[event.id] = event
       @type[event.type] = true
+
+      if not @_range then @_range = event.range!
+      else @_range = @_range.add event.range!
+      
       @length++
     @
   
