@@ -164,8 +164,11 @@ describe 'events', ->
       type: 'price'
 
     dummies = new events.MemEvents [@event1, dummy1, dummy2 ]
+    diff = @events.diff dummies
+
+    apply = @events.apply diff
     
-    eventGrapher.drawEvents 'diff', @events, dummies, @events.diff dummies
+    eventGrapher.drawEvents 'diff', @events, dummies, diff, apply
     resolve!
     
   specify 'reduce', -> new p (resolve,reject) ~>
@@ -181,7 +184,7 @@ describe 'events', ->
         events.pushm do
           event.clone range: range1, id: event.id + '-split1'
           event.clone range: range2, id: event.id + '-split2'
-  
+
     eventGrapher.drawEvents 'reduce', @events, res
     
     expect res.serialize()

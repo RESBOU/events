@@ -240,34 +240,27 @@ Events = exports.Events = class Events extends EventLike
 
   diff: (events) ->
     makeDiff = (diff, event) ~>
-
-      
-      console.log "STUFF I HAVE IS", String diff
       collisions = event.relevantEvents diff
-      console.log "COLLISIONS FOR", event.id, String collisions
-      
-      
       
       if not collisions.length then return diff
       else
         
         return diff.popm(collisions).pushm collisions.reduce (res, collision) ->
           [ range, payload ] = event.compare collision
-          console.log event.id, 'colliding with', collision.id, { range: range, payload: payload }
 
           if not range and not payload then return res.pushm collision
-          if payload
-            console.log 'sub'
-            return res.pushm collision.subtract event
-
-          if range
-            return res.pushm collision
-
+          if payload then return res.pushm collision.subtract event
+          if range then return res.pushm collision
           return res
-
     
     @reduce makeDiff, (parse.events events).clone()
 
+
+  apply: (events) ->
+    @reduce (res, event) ~>
+      res.pushm event.subtract events
+    .pushm events
+      
 
     
   # ( Events ) -> Events
