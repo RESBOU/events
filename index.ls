@@ -64,7 +64,6 @@ EventLike = exports.EventLike = class EventLike
     parse.events events
     .filter range: @ #, type: @type ## TODO
 
-
   # ( EventLike ) -> Events
   push: (event) -> ...
   
@@ -176,13 +175,16 @@ Events = exports.Events = class Events extends EventLike
   _find: (range, pattern) -> ...
     
   # ( rangeEquivalent ) -> Events
-  clone: (rangeEquivalent) ~> ...
+#  clone: (rangeEquivalent) ~> ...
 
   # ( EventCollection) -> Events
   pushm: (eventCollection) -> true
 
   # ( EventCollection) -> Events
   push: (eventCollection) -> @clone events
+
+  # () -> Events
+  without: ->  ...
 
   # ( Function ) -> void
   each: (cb) -> @_each cb
@@ -236,37 +238,38 @@ Events = exports.Events = class Events extends EventLike
         else
           res.pushm [ event1, event2.subtract(event1) ]
 
-  diff: (events) ->    
-    diff = new MemEvents()
-    
-    @map (event) ~>
-      collisions = event.relevantEvents events
-      console.log "collide", event.id
+  diff: (events) ->
+    makeDiff = (diff, event) ~>
+
       
-      if not collisions.length
-        
-        update = event.clone id: event.id + "-del"
-        update.markDelete!
-        diff.pushm update
-        
+      console.log "STUFF I HAVE IS", String diff
+      collisions = event.relevantEvents diff
+      console.log "COLLISIONS FOR", event.id, String collisions
+      
+      
+      
+      if not collisions.length then return diff
       else
-      
-        diff.pushm collisions.map (eNew) ->
-          [ range, payload ] = event.compare eNew
-          
-          console.log event.id, eNew.id, range,payload
-          
-          if range and payload then return void
+        
+        return diff.popm(collisions).pushm collisions.reduce (res, collision) ->
+          [ range, payload ] = event.compare collision
+          console.log event.id, 'colliding with', collision.id, { range: range, payload: payload }
+
+          if not range and not payload then return res.pushm collision
           if payload
             console.log 'sub'
-            return eNew.subtract event
-          else
-            console.log 'payload diff', eNew.id
-            return eNew
-            
-    diff        
-        
-          
+            return res.pushm collision.subtract event
+
+          if range
+            return res.pushm collision
+
+          return res
+
+    
+    @reduce makeDiff, (parse.events events).clone()
+
+
+    
   # ( Events ) -> Events
   union: (events) ->
     res = @clone()
@@ -300,6 +303,9 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
       length: 0
       type: {}
     super ...
+  
+  without: (event) ->
+    new MemEvents filter (values @events), -> it.id isnt event.id
     
   toArray: -> values @events
 
@@ -326,7 +332,19 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
     ret
 
   range: -> @_range
-                        
+
+  clone: (range) ->
+    new MemEvents values @events
+
+  popm: (...events) -> 
+    each parse.eventArray(events), (event) ~>
+      if not event then return
+      if not @events[event.id]? then return
+      else
+        delete @events[event.id]
+        @length--
+    @
+                                                
   pushm: (...events) ->
     each parse.eventArray(events), (event) ~>
       if not event then return
