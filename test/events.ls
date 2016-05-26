@@ -146,7 +146,7 @@ describe 'events', ->
     resolve!
         
     
-  specify 'diff', -> new p (resolve,reject) ~>
+  specify 'diff-apply', -> new p (resolve,reject) ~>
 
     dummy1 = new events.Event do
       id: 'dummy1'
@@ -163,12 +163,27 @@ describe 'events', ->
       payload: 150
       type: 'price'
 
-    dummies = new events.MemEvents [@event1, dummy1, dummy2 ]
-    diff = @events.diff dummies
+    dummy3 = new events.Event do
+      id: 'dummy3'
+      start: @start.clone().add 17, 'days'
+      end: @start.clone().add 23, 'days'
+      payload: 175
+      type: 'price'
 
-    [ create, remove ] = @events.apply diff
+
+    dummies = new events.MemEvents [@event1, dummy1, dummy2, dummy3 ]
+
+    targets = @events.pushm new events.Event {
+        id: 'ea4'
+        start: @start.clone().add 15, 'days'
+        end: @start.clone().add 20, 'days'
+        payload: 175}
+
+    diff = targets.diff dummies
+
+    [ create, remove ] = targets.apply diff
     
-    eventGrapher.drawEvents 'diff-apply', @events, dummies, diff, create, remove
+    eventGrapher.drawEvents 'diff-apply', targets, dummies, diff, create, remove
     resolve!
     
   specify 'reduce', -> new p (resolve,reject) ~>
@@ -216,7 +231,13 @@ describe 'events', ->
         start: '2016-04-12 22:00:00',
         end: '2016-04-17 22:00:00',
         payload: 150
-      } ]
+      }
+      {
+        end: "2016-04-22 22:00:00"
+        id: "ea4-clone"
+        payload: 175
+        start: "2016-04-17 22:00:00"
+      }]
 
     resolve!
 

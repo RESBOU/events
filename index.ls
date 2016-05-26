@@ -266,15 +266,15 @@ Events = exports.Events = class Events extends EventLike
   apply: (events) ->
     @reduce do
       ([ create, remove ], event) ~>
-      
+
         if (relevantEvents = event.relevantEvents(events)).length
           remove.pushm event
-          create.pushm event.subtract(relevantEvents)
+          create.pushm event.subtract relevantEvents
 
         [ create, remove ]
 
       [ events.clone(), new MemEvents() ]
-                  
+      
   merge: ->
     @reduce (res, event) ~>
       event
