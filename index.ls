@@ -64,6 +64,23 @@ EventLike = exports.EventLike = class EventLike
     parse.events events
     .filter range: @ #, type: @type ## TODO
 
+  neighbours: (events) ->
+    [
+      events.filter range: { start: @start - 1, end: @start - 1 }
+      events.filter range: { start: @end + 1, end: @end + 1 }
+    ]
+
+  # get or set range
+  # (range?) -> moment.range
+  range: (setRange) ->
+    if range = setRange
+      @start = range.start.clone()
+      @end = range.end.clone()
+    else
+      range = new moment.range @start, @end
+      
+    range
+
   # ( EventLike ) -> Events
   push: (event) -> ...
   
@@ -74,9 +91,6 @@ EventLike = exports.EventLike = class EventLike
     
   # ( EventLike, (Event, Event) -> Events) -> Events
   collide: (events, cb) -> ...
-
-  # () -> moment.range
-  range: -> ...
 
   each: -> ...
 
@@ -130,17 +144,6 @@ Event = exports.Event = class Event extends EventLike
     end = format @end
     if @price then "Price(" + @price + " " + start + ")"
     else "Event(" + @id + ")"
-
-  # get or set range
-  # (range?) -> moment.range
-  range: (setRange) ->
-    if range = setRange
-      @start = range.start.clone()
-      @end = range.end.clone()
-    else
-      range = new moment.range @start, @end
-      
-    return range
     
   # ( Events ) -> Events
   subtractMany: (events) ->
@@ -162,6 +165,14 @@ Event = exports.Event = class Event extends EventLike
     .reduce (events, event) ~> events.pushm cb event, @
 
   each: (cb) -> cb @
+
+    
+  merge: (event) ->
+    newSelf = @clone()
+    if event.start < newSelf.start then newSelf.start = event.start
+    if event.end > newSelf.end then newSelf.end = event.end
+    newSelf
+    
 
 PersistLayer = exports.PersistLayer = class
   markRemove: -> @toRemove = true
@@ -274,7 +285,7 @@ Events = exports.Events = class Events extends EventLike
         [ create, remove ]
 
       [ events.clone(), new MemEvents() ]
-      
+    
   merge: ->
     @reduce (res, event) ~>
       event
@@ -343,8 +354,6 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
     ret.pushm filter events, checkPattern pattern
     ret
 
-  range: -> @_range
-
   clone: (range) ->
     new MemEvents values @events
 
@@ -364,8 +373,9 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
       @events[event.id] = event
       @type[event.type] = true
 
-      if not @_range then @_range = event.range!
-      else @_range = @_range.add event.range!
+
+      if event.start < @start or not @start then @start = event.start
+      if event.end < @end or not @end then @end = event.end
       
       @length++
     @

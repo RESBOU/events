@@ -182,7 +182,9 @@ describe 'events', ->
     diff = targets.diff dummies
 
     [ create, remove ] = targets.apply diff
-    
+
+    mergeCreate = create.
+            
     eventGrapher.drawEvents 'diff-apply', targets, dummies, diff, create, remove
     resolve!
     
