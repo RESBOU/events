@@ -146,7 +146,7 @@ describe 'events', ->
     resolve!
         
     
-  specify 'diff-apply', -> new p (resolve,reject) ~>
+  specify 'diff-apply-merge', -> new p (resolve,reject) ~>
 
     dummy1 = new events.Event do
       id: 'd1'
@@ -173,17 +173,29 @@ describe 'events', ->
 
     dummies = new events.MemEvents [ @event1, dummy1, dummy2, dummy3 ]
 
-    targets = @events.pushm new events.Event {
+    targets = @events.clone()
+
+    targets
+      .pushm new events.Event {
         id: 'ea4'
         start: @start.clone().add 15, 'days'
         end: @start.clone().add 20, 'days'
+        payload: 175 }
+        
+    targets
+      .pushm new events.Event {
+        id: 'ea0'
+        start: @start.clone().subtract 2, 'days'
+        end: @start.clone()
         payload: 175}
 
     diff = targets.diff dummies
 
     [ create, remove ] = targets.apply diff
-            
-    eventGrapher.drawEvents 'diff-apply', targets, dummies, diff, create, remove
+
+#    merge = create.merge()
+#    console.log merge
+    eventGrapher.drawEvents 'diff-apply-merge', targets, dummies, diff, create, remove
     resolve!
         
   specify 'neighbours', -> new p (resolve,reject) ~>
@@ -211,8 +223,7 @@ describe 'events', ->
 
     eventGrapher.drawEvents 'neighbours', @events, start, end
     resolve!
-    
-    
+
   specify 'reduce', -> new p (resolve,reject) ~>
     res = @events.reduce (events, event) ->
       range = event.range!
@@ -258,12 +269,6 @@ describe 'events', ->
         start: '2016-04-12 22:00:00',
         end: '2016-04-17 22:00:00',
         payload: 150
-      }
-      {
-        end: "2016-04-22 22:00:00"
-        id: "ea4-clone"
-        payload: 175
-        start: "2016-04-17 22:00:00"
       }]
 
     resolve!

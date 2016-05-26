@@ -289,9 +289,9 @@ Events = exports.Events = class Events extends EventLike
   merge: ->
     @reduce (res, event) ~>
       event
-        .neighbours()
+        .neighbours(@)
         .map (oldEvent) -> 
-          if oldEvent and oldEvent.payload is oldEvent.payload then oldEvent.merge event
+          if oldEvent.length and oldEvent.payload is oldEvent.payload then oldEvent.merge event
     
   # ( Events ) -> Events
   union: (events) ->
