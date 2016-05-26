@@ -189,10 +189,27 @@ describe 'events', ->
   specify 'neighbours', -> new p (resolve,reject) ~>
     [ start, end ] = @events.events['ea2'].neighbours @events
 
-    console.log String start
-    console.log String end
-    
-    eventGrapher.drawEvents 'neighbours', @events
+    expect start.serialize()
+    .to.deep.equal do
+      [
+        type: 'price',
+        id: 'ea1',
+        start: '2016-03-31 22:00:00',
+        end: '2016-04-05 22:00:00',
+        payload: 100
+      ]
+      
+    expect end.serialize()
+    .to.deep.equal do
+      [
+        type: 'price',
+        id: 'ea3',
+        start: '2016-04-10 22:00:00',
+        end: '2016-04-15 22:00:00',
+        payload: 150 
+      ]
+
+    eventGrapher.drawEvents 'neighbours', @events, start, end
     resolve!
     
     
