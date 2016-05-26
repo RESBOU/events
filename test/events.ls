@@ -166,9 +166,9 @@ describe 'events', ->
     dummies = new events.MemEvents [@event1, dummy1, dummy2 ]
     diff = @events.diff dummies
 
-    apply = @events.apply diff
+    [ create, remove ] = @events.apply diff
     
-    eventGrapher.drawEvents 'diff-apply', @events, dummies, diff, apply
+    eventGrapher.drawEvents 'diff-apply', @events, dummies, diff, create, remove
     resolve!
     
   specify 'reduce', -> new p (resolve,reject) ~>

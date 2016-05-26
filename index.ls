@@ -163,6 +163,14 @@ Event = exports.Event = class Event extends EventLike
 
   each: (cb) -> cb @
 
+PersistLayer = exports.PersistLayer = class
+  markRemove: -> @toRemove = true
+  save: -> new p (resolve,reject) ~>
+    if @toRemove then resolve @remove!
+    else ...
+      
+  remove: -> new p (resolve,reject) ~> ...
+
 # * Events
 # abstract event collection
 # supporting common set operations,
@@ -244,7 +252,7 @@ Events = exports.Events = class Events extends EventLike
       
       if not collisions.length then return diff
       else
-        
+      
         return diff.popm(collisions).pushm collisions.reduce (res, collision) ->
           [ range, payload ] = event.compare collision
 
@@ -256,11 +264,17 @@ Events = exports.Events = class Events extends EventLike
     @reduce makeDiff, (parse.events events).clone()
 
   apply: (events) ->
-    @reduce (res, event) ~>
-      res.pushm event.subtract events
-    .pushm events
+    @reduce do
+      ([ create, remove ], event) ~>
       
+        if (relevantEvents = event.relevantEvents(events)).length
+          remove.pushm event
+          create.pushm event.subtract(relevantEvents)
 
+        [ create, remove ]
+
+      [ events.clone(), new MemEvents() ]
+                  
   merge: ->
     @reduce (res, event) ~>
       event
