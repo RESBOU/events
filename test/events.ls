@@ -149,7 +149,7 @@ describe 'events', ->
   specify 'diff-apply', -> new p (resolve,reject) ~>
 
     dummy1 = new events.Event do
-      id: 'dummy1'
+      id: 'd1'
       start: @start.clone().add 6, 'days'
       end: @start.clone().add 8, 'days'
       payload: 195
@@ -157,21 +157,21 @@ describe 'events', ->
       
     
     dummy2 = new events.Event do
-      id: 'dummy2'
+      id: 'd2'
       start: @start.clone().add 9, 'days'
       end: @start.clone().add 17, 'days'
       payload: 150
       type: 'price'
 
     dummy3 = new events.Event do
-      id: 'dummy3'
+      id: 'd3'
       start: @start.clone().add 17, 'days'
       end: @start.clone().add 23, 'days'
       payload: 175
       type: 'price'
 
 
-    dummies = new events.MemEvents [@event1, dummy1, dummy2, dummy3 ]
+    dummies = new events.MemEvents [ @event1, dummy1, dummy2, dummy3 ]
 
     targets = @events.pushm new events.Event {
         id: 'ea4'
@@ -182,11 +182,19 @@ describe 'events', ->
     diff = targets.diff dummies
 
     [ create, remove ] = targets.apply diff
-
-    mergeCreate = create.
             
     eventGrapher.drawEvents 'diff-apply', targets, dummies, diff, create, remove
     resolve!
+        
+  specify 'neighbours', -> new p (resolve,reject) ~>
+    [ start, end ] = @events.events['ea2'].neighbours @events
+
+    console.log String start
+    console.log String end
+    
+    eventGrapher.drawEvents 'neighbours', @events
+    resolve!
+    
     
   specify 'reduce', -> new p (resolve,reject) ~>
     res = @events.reduce (events, event) ->

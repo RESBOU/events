@@ -66,8 +66,8 @@ EventLike = exports.EventLike = class EventLike
 
   neighbours: (events) ->
     [
-      events.filter range: { start: @start - 1, end: @start - 1 }
-      events.filter range: { start: @end + 1, end: @end + 1 }
+      events.filter end: @start.clone()
+      events.filter start: @end.clone()
     ]
 
   # get or set range
@@ -337,7 +337,7 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
   _rangeSearch: (range) ->
     filter @events, ->
       range.contains it.start or range.contains it.end or it.range!.contains range
-      
+                  
   _filter: (range, pattern) ->
     ret = new MemEvents()
     
@@ -349,7 +349,10 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
         not find pattern, (value, key) ->
           if value is true then return not event[key]?
           else
-            if event[key] is value then return false else return true
+            if not moment.isMoment value
+              if event[key] is value then return false else return true
+            else
+              return not value.isSame event[key]
               
     ret.pushm filter events, checkPattern pattern
     ret
