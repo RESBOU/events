@@ -255,13 +255,18 @@ Events = exports.Events = class Events extends EventLike
     
     @reduce makeDiff, (parse.events events).clone()
 
-
   apply: (events) ->
     @reduce (res, event) ~>
       res.pushm event.subtract events
     .pushm events
       
 
+  merge: ->
+    @reduce (res, event) ~>
+      event
+        .neighbours()
+        .map (oldEvent) -> 
+          if oldEvent and oldEvent.payload is oldEvent.payload then oldEvent.merge event
     
   # ( Events ) -> Events
   union: (events) ->

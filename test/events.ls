@@ -168,7 +168,7 @@ describe 'events', ->
 
     apply = @events.apply diff
     
-    eventGrapher.drawEvents 'diff', @events, dummies, diff, apply
+    eventGrapher.drawEvents 'diff-apply', @events, dummies, diff, apply
     resolve!
     
   specify 'reduce', -> new p (resolve,reject) ~>
