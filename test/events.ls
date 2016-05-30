@@ -18,7 +18,7 @@ xspecify = -> true
 
 describe 'events', ->
   before -> new p (resolve,reject) ~>
-    
+     
     e = do
       type: 'price'
       
@@ -145,6 +145,15 @@ describe 'events', ->
     eventGrapher.drawEvents 'filter', @events, filterQuery1, res1, filterQuery2, res2, filterQuery3, res3
     resolve!
         
+
+  specify 'parse events', -> new p (resolve,reject) ~>
+    expect @events instanceof events.Events
+    .to.equal true
+
+    expect events.parse.events @events
+    .to.equal @events
+    
+    resolve!
     
   specify 'diff-apply-merge', -> new p (resolve,reject) ~>
 

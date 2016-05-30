@@ -1,14 +1,12 @@
 # * require
 require! {
   bluebird: p
-  leshdash: { w, find, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues, omit }
-  
+  leshdash: { w, find, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues, omit }  
   moment
   'moment-range'
 }
 
 # * Type coercion functions for a more chilled out API
-
 format = exports.format = -> it.format 'YYYY-MM-DD'
 
 parse = exports.parse = do 
@@ -21,7 +19,8 @@ parse = exports.parse = do
 
   # (any) -> MemEvents | Error
   events: ->
-    if it instanceof Events then return it
+    if it.isEvents? then return it
+    
     switch it?@@
       | Array => new MemEvents it
       | otherwise => new MemEvents parse.event it
@@ -37,11 +36,11 @@ parse = exports.parse = do
   range: (something, def) ->
     switch something?@@
       | false => def or void
-      | Object => new moment.range something
-      | Array => new moment.range Array
+      | Object => moment.range something
+      | Array => moment.range something
       | Event => something.range!
       | MemEvents => something.range!
-      | otherwise => something
+      | otherwise => something.range?! or something
     
 # ( Events | Array<Event> | Event | void ) -> Array<Event>
   eventCollection: (something) ->
@@ -54,7 +53,6 @@ parse = exports.parse = do
 
 # * EventLike
 # more of a spec then anything, this is implemented by Event & Events
-# 
 
 EventLike = exports.EventLike = class EventLike
 
@@ -165,7 +163,6 @@ Event = exports.Event = class Event extends EventLike
     .reduce (events, event) ~> events.pushm cb event, @
 
   each: (cb) -> cb @
-
     
   merge: (event) ->
     newSelf = @clone()
@@ -176,6 +173,7 @@ Event = exports.Event = class Event extends EventLike
 
 PersistLayer = exports.PersistLayer = class
   markRemove: -> @toRemove = true
+  
   save: -> new p (resolve,reject) ~>
     if @toRemove then resolve @remove!
     else ...
@@ -188,6 +186,7 @@ PersistLayer = exports.PersistLayer = class
 # and some uncommon operations related to time (collide, subtract)
  
 Events = exports.Events = class Events extends EventLike
+  isEvents: true
   (...events) -> @pushm.apply @, events
 
   # ( MomentRange, Object ) -> Events
@@ -209,7 +208,7 @@ Events = exports.Events = class Events extends EventLike
   each: (cb) -> @_each cb
 
   # () -> String
-  toString: -> "E < " + (@map (event) -> "" + event).join(", ") + " >"
+  toString: -> "E[#{@length}] < " + (@map (event) -> "" + event).join(", ") + " >"
 
   # () -> Json
   serialize: -> @map (.serialize!)
@@ -271,8 +270,11 @@ Events = exports.Events = class Events extends EventLike
           if payload then return res.pushm collision.subtract event
           if range then return res.pushm collision
           return res
-    
-    @reduce makeDiff, (parse.events events).clone()
+
+#    console.log "PRE PARSE", String events
+    events = parse.events events
+#    console.log "POST PARSE", String events
+    @reduce makeDiff, events.clone()
 
   apply: (events) ->
     @reduce do
@@ -289,9 +291,9 @@ Events = exports.Events = class Events extends EventLike
   merge: ->
     @reduce (res, event) ~>
       event
-        .neighbours(@)
-        .map (oldEvent) -> 
-          if oldEvent.length and oldEvent.payload is oldEvent.payload then oldEvent.merge event
+      .neighbours(@)
+      .map (oldEvent) -> 
+        if oldEvent.length and oldEvent.payload is oldEvent.payload then oldEvent.merge event
     
   # ( Events ) -> Events
   union: (events) ->
