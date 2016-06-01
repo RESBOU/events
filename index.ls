@@ -12,15 +12,16 @@ format = exports.format = -> it.format 'YYYY-MM-DD'
 parse = exports.parse = do 
   # (any) -> Event | Error
   event: ->
+    if it?isEvent? then return it
+      
     switch it?@@
-      | Event => it
       | Object => new Event it
       | otherwise => throw new Error "invalid type for event #{it@@}"
 
   # (any) -> MemEvents | Error
   events: ->
-    if it.isEvents? then return it
-    
+    if it?isEvents? then return it
+      
     switch it?@@
       | Array => new MemEvents it
       | otherwise => new MemEvents parse.event it
@@ -113,6 +114,8 @@ parseInit = (data) ->
   else return data
 
 Event = exports.Event = class Event extends EventLike
+  isEvent: true
+  
   (init) -> assign @, parseInit init
 
   compare: (event) ->
@@ -155,7 +158,10 @@ Event = exports.Event = class Event extends EventLike
     cnt = 0
     new MemEvents map do
       @range().subtract event.range()
-      ~> @clone { start: it.start, end: it.end, id: @id + '-' + cnt++ }
+      ~>
+        newEvent = @clone { start: it.start, end: it.end, id: @id + '-' + cnt++ }
+        delete newEvent.repr
+        newEvent
 
   # ( Events, (Event, Event) -> Events ) -> Events
   collide: (events, cb) ->
