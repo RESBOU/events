@@ -158,10 +158,7 @@ Event = exports.Event = class Event extends EventLike
     cnt = 0
     new MemEvents map do
       @range().subtract event.range()
-      ~>
-        newEvent = @clone { start: it.start, end: it.end, id: @id + '-' + cnt++ }
-        delete newEvent.repr
-        newEvent
+      ~> @clone { start: it.start, end: it.end, id: @id + '-' + cnt++, repr: void } # get rid of potential old repr, this is a new event
 
   # ( Events, (Event, Event) -> Events ) -> Events
   collide: (events, cb) ->
@@ -192,6 +189,10 @@ PersistLayer = exports.PersistLayer = class
 # and some uncommon operations related to time (collide, subtract)
  
 Events = exports.Events = class Events extends EventLike
+
+  # per day data (airbnb api helper)
+  days: (cb) -> @each (event) -> event.range!by 'days', ~> cb it, event
+
   isEvents: true
   (...events) -> @pushm.apply @, events
 
@@ -277,9 +278,7 @@ Events = exports.Events = class Events extends EventLike
           if range then return res.pushm collision
           return res
 
-#    console.log "PRE PARSE", String events
     events = parse.events events
-#    console.log "POST PARSE", String events
     @reduce makeDiff, events.clone()
 
   apply: (events) ->
