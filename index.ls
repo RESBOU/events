@@ -137,7 +137,7 @@ Event = exports.Event = class Event extends EventLike
 
   # () -> Json
   serialize: ->
-    assign {}, @, mapValues (pick @, <[ start end ]>), (value) -> value.utc().format "YYYY-MM-DD HH:mm:ss"
+    assign {}, @, mapValues (pick @, <[ start end ]>), (value) -> value.format "YYYY-MM-DD HH:mm:ss"
 
   # () -> String
   toString: ->
