@@ -1,7 +1,8 @@
+# autocompile
 # * require
 require! {
   bluebird: p
-  leshdash: { w, find, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues, omit }  
+  leshdash: { w, find, omit, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues, omit }  
   moment
   'moment-range'
 }
@@ -133,7 +134,10 @@ Event = exports.Event = class Event extends EventLike
     @payload is event.payload
   
   clone: (data={}) ->
-    new Event assign {}, @, { id: @id + '-clone'}, data
+    ret = new Event assign {}, @, { id: @id + '-clone'}, data
+    delete ret.repr
+    ret
+    
 
   # () -> Json
   serialize: ->
@@ -158,7 +162,7 @@ Event = exports.Event = class Event extends EventLike
     cnt = 0
     new MemEvents map do
       @range().subtract event.range()
-      ~> @clone { start: it.start, end: it.end, id: @id + '-' + cnt++, repr: void } # get rid of potential old repr, this is a new event
+      ~> @clone { start: it.start, end: it.end, id: @id + '-' + cnt++ } # get rid of potential old repr, this is a new event
 
   # ( Events, (Event, Event) -> Events ) -> Events
   collide: (events, cb) ->
