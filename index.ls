@@ -17,7 +17,10 @@ parse = exports.parse = do
       
     switch it?@@
       | Object => new Event it
-      | otherwise => throw new Error "invalid type for event #{it@@}"
+      | otherwise =>
+        console.log it
+        console.log String it
+        throw new Error "invalid type for event #{it?toString?!} #{it?@@}"
 
   # (any) -> MemEvents | Error
   events: ->
@@ -109,7 +112,9 @@ parseInit = (data) ->
     data.start = data.range.start
     data.end = data.range.end
     delete data.range
-    return data
+
+  if data.start?@@ is String then data.start = moment data.start
+  if data.end?@@ is String then data.end = moment data.end
     
   if data@@ isnt Object then return "wut wut"
   else return data
@@ -131,13 +136,13 @@ Event = exports.Event = class Event extends EventLike
     
   isSamePayload: (event) ->
     event = parse.event event
-    @payload is event.payload
+    @type is event.type and @payload is event.payload
   
   clone: (data={}) ->
     ret = new Event assign {}, @, { id: @id + '-clone'}, data
     delete ret.repr
     ret
-    
+
   # () -> Json
   serialize: ->
     assign {}, @, mapValues (pick @, <[ start end ]>), (value) -> value.format "YYYY-MM-DD HH:mm:ss"
@@ -147,7 +152,7 @@ Event = exports.Event = class Event extends EventLike
     start = format @start
     end = format @end
     if @price then "Price(" + @price + " " + start + ")"
-    else "Event(" + @id + ")"
+    else "Event(" + (@id or "unsaved-" + @type)  + ")"
     
   # ( Events ) -> Events
   subtractMany: (events) ->
@@ -269,13 +274,12 @@ Events = exports.Events = class Events extends EventLike
   diff: (events) ->
     makeDiff = (diff, event) ~>
       collisions = event.relevantEvents diff
-      
       if not collisions.length then return diff
       else
       
         return diff.popm(collisions).pushm collisions.reduce (res, collision) ->
           [ range, payload ] = event.compare collision
-
+          
           if not range and not payload then return res.pushm collision
           if payload then return res.pushm collision.subtract event
           if range then return res.pushm collision
