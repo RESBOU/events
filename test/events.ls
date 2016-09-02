@@ -49,12 +49,14 @@ describe 'events', ->
 
     @event1 = new events.Event do
       id: "event1"
+      type: "price"
       start: @start.clone().add 1 'days'
       end: @start.clone().add 3 'days'
       payload: 300
 
     @event2 = new events.Event do
       id: 'event2'
+      type: "price"
       start: @start.clone().add 2 'days'
       end: @start.clone().add 4 'days'
       payload: 600
@@ -73,7 +75,7 @@ describe 'events', ->
     
   specify 'serializeOne', -> new p (resolve,reject) ~>
     expect @event1.serialize()
-    .to.deep.equal { id: "event1", start: '2016-04-02 00:00:00', end: '2016-04-04 00:00:00', payload: 300 }
+    .to.deep.equal { id: "event1", start: '2016-04-02 00:00:00', end: '2016-04-04 00:00:00', payload: 300, type: 'price' }
     resolve!
 
   specify 'serializeMany', -> new p (resolve,reject) ~>
@@ -203,7 +205,7 @@ describe 'events', ->
 
 #    merge = create.merge()
 #    console.log merge
-    eventGrapher.drawEvents 'diff-apply-merge', targets, dummies, diff, create, remove
+    eventGrapher.drawEvents 'diff-apply-merge', targets, dummies, diff, remove, create
     resolve!
         
   specify 'neighbours', -> new p (resolve,reject) ~>
@@ -376,6 +378,7 @@ describe 'events', ->
     expect res.serialize()
     .to.deep.equal do
        [ { id: 'event1-0',
+       type: 'price'
        start: '2016-04-02 00:00:00',
        end: '2016-04-03 00:00:00',
        payload: 300 } ]
@@ -417,9 +420,41 @@ describe 'events', ->
       end: '2016-04-08 00:00:00',
       payload: 300 } ]
 
+  specify 'bookingUpdate', -> new p (resolve,reject) ~>
+
+
+    dummy1 = new events.Event do
+      id: 'd1'
+      start: @start.clone().add 6, 'days'
+      end: @start.clone().add 8, 'days'
+      payload: 195
+      type: 'price'
+      
+    dummy2 = new events.Event do
+      id: 'd2'
+      start: @start.clone().add 9, 'days'
+      end: @start.clone().add 17, 'days'
+      payload: 150
+      type: 'price'
+
+    dummy3 = new events.Event do
+      id: 'd3'
+      start: @start.clone().add 17, 'days'
+      end: @start.clone().add 23, 'days'
+      payload: 175
+      type: 'price'
+
 
     
-    
+    dummies = new events.MemEvents [ @event1, dummy1, dummy2, dummy3 ]
+    targets = @events.clone()
+
+    create = targets.diff dummies
+    remove = dummies.diff targets
+
+    eventGrapher.drawEvents 'bookingUpdate', targets, dummies, create, remove
+    .then resolve
+
   specify 'subMany2Many', -> new p (resolve,reject) ~>
     
     crashTargets = new events.MemEvents do
@@ -479,215 +514,63 @@ describe 'events', ->
       payload: 200 } ]
     
     
-  specify 'real_world_diff', -> new p (resolve,reject) ~>
-    olde = new events.MemEvents do
-      { 
-        start: '2016-07-21 00:00:00',
-        end: '2016-07-21 23:59:59',
-        payload: true,
-        type: 'busy',
-        id: '57b52cb67400c73214e713eb',
-        tags: { airbnb: 2157755 },
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-07-20T22:00:00.000Z',
-           end: '2016-07-21T21:59:59.999Z',
-           payload: true,
-           type: 'busy',
-           tags: { airbnb: 2157755 },
-           createdAt: '2016-08-18T03:34:14.628Z',
-           updatedAt: '2016-08-18T03:34:14.628Z',
-           id: '57b52cb67400c73214e713eb' } }
-          
-      { 
-        start: '2016-07-22 00:00:00',
-        end: '2016-07-25 23:59:59',
-        payload: 159,
-        type: 'price',
-        id: '57b52cb67400c73214e713ec',
-        tags: { airbnb: 2157755 },
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-07-21T22:00:00.000Z',
-           end: '2016-07-25T21:59:59.999Z',
-           payload: 159,
-           type: 'price',
-           tags: { airbnb: 2157755 },
-           createdAt: '2016-08-18T03:34:14.630Z',
-           updatedAt: '2016-08-18T03:34:14.630Z',
-           id: '57b52cb67400c73214e713ec' } }
-          
-      { 
-        start: '2016-07-26 00:00:00',
-        end: '2016-08-01 23:59:59',
-        payload: true,
-        type: 'busy',
-        id: '57b52cb67400c73214e713ed',
-        tags: { airbnb: 2157755 },
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-07-25T22:00:00.000Z',
-           end: '2016-08-01T21:59:59.999Z',
-           payload: true,
-           type: 'busy',
-           tags: { airbnb: 2157755 },
-           createdAt: '2016-08-18T03:34:14.632Z',
-           updatedAt: '2016-08-18T03:34:14.632Z',
-           id: '57b52cb67400c73214e713ed' } }
-      { 
-        start: '2016-11-24 00:00:00',
-        end: '2016-11-26 23:59:59',
-        payload: true,
-        type: 'busy',
-        id: '57b52cb67400c73214e713f1',
-        tags: { airbnb: 2157755 },
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-11-23T23:00:00.000Z',
-           end: '2016-11-26T22:59:59.999Z',
-           payload: true,
-           type: 'busy',
-           tags: { airbnb: 2157755 },
-           createdAt: '2016-08-18T03:34:14.635Z',
-           updatedAt: '2016-08-18T03:34:14.635Z',
-           id: '57b52cb67400c73214e713f1' } }
-      { 
-        start: '2016-11-27 00:00:00',
-        end: '2016-12-31 23:59:59',
-        payload: 131,
-        type: 'price',
-        id: '57b52cb67400c73214e713f2',
-        tags: { airbnb: 2157755 },
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-11-26T23:00:00.000Z',
-           end: '2016-12-31T22:59:59.999Z',
-           payload: 131,
-           type: 'price',
-           tags: { airbnb: 2157755 },
-           createdAt: '2016-08-18T03:34:14.636Z',
-           updatedAt: '2016-08-18T03:34:14.636Z',
-           id: '57b52cb67400c73214e713f2' } }
-          
-      { 
-        start: '2016-08-22 00:00:00',
-        end: '2016-08-23 00:00:00',
-        type: 'busy',
-        id: '57b9b0ca77539a56095c5df1',
-        tags: {},
-        repr: 
-         {
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-08-21T22:00:00.000Z',
-           end: '2016-08-22T22:00:00.000Z',
-           type: 'busy',
-           tags: {},
-           createdAt: '2016-08-21T13:46:50.273Z',
-           updatedAt: '2016-08-21T13:46:50.273Z',
-           id: '57b9b0ca77539a56095c5df1' } }
-          
-      { 
-        start: '2016-08-23 00:00:00',
-        end: '2016-08-24 00:00:00',
-        type: 'busy',
-        id: '57b9b0ca77539a56095c5df2',
-        tags: {},
-        repr:
-         { 
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-11-26T23:00:00.000Z',
-           end: '2016-12-31T22:59:59.999Z',
-           payload: 131,
-           type: 'price',
-           tags: { airbnb: 2157755 },
-           createdAt: '2016-08-18T03:34:14.636Z',
-           updatedAt: '2016-08-18T03:34:14.636Z',
-           id: '57b52cb67400c73214e713f2' } }
-          
-      { 
-        start: '2016-08-22 00:00:00',
-        end: '2016-08-23 00:00:00',
-        type: 'busy',
-        id: '57b9b0ca77539a56095c5df1',
-        tags: {},
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-08-21T22:00:00.000Z',
-           end: '2016-08-22T22:00:00.000Z',
-           type: 'busy',
-           tags: {},
-           createdAt: '2016-08-21T13:46:50.273Z',
-           updatedAt: '2016-08-21T13:46:50.273Z',
-           id: '57b9b0ca77539a56095c5df1' } }
-          
-      { 
-        start: '2016-08-23 00:00:00',
-        end: '2016-08-24 00:00:00',
-        type: 'busy',
-        id: '57b9b0ca77539a56095c5df2',
-        tags: {},
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           start: '2016-08-22T22:00:00.000Z',
-           end: '2016-08-23T22:00:00.000Z',
-           type: 'busy',
-           tags: {},
-           createdAt: '2016-08-21T13:46:50.275Z',
-           updatedAt: '2016-08-21T13:46:50.275Z',
-           id: '57b9b0ca77539a56095c5df2' } }
-          
-      { 
-        start: '2016-08-30 23:59:59',
-        end: '2016-08-31 23:59:59',
-        type: 'busy',
-        id: '57b9b29b3b011dec0e986bbe',
-        tags: {},
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           
-           start: '2016-08-30T21:59:59.000Z',
-           end: '2016-08-31T21:59:59.000Z',
-           type: 'busy',
-           tags: {},
-           createdAt: '2016-08-21T13:54:35.118Z',
-           updatedAt: '2016-08-21T13:54:35.118Z',
-           id: '57b9b29b3b011dec0e986bbe' }  }
-          
-      { 
-        start: '2016-08-24 00:00:00',
-        end: '2016-08-30 23:59:59',
-        type: 'busy',
-        id: '57b9b29b3b011dec0e986bbf',
-        tags: {},
-        repr: 
-         { 
-           property: '57b52cad7400c73214e7139a',
-           
-           start: '2016-08-23T22:00:00.000Z',
-           end: '2016-08-30T21:59:59.000Z',
-           type: 'busy',
-           tags: {},
-           createdAt: '2016-08-21T13:54:35.122Z',
-           updatedAt: '2016-08-21T13:54:35.122Z',
-           id: '57b9b29b3b011dec0e986bbf' } }
+  specify 'diff-change-merge', -> new p (resolve,reject) ~>
 
-    newe = new events.MemEvents do
-      {
-        type: 'busy',
-        start: '2016-08-23 00:00:00',
-        end: '2016-08-29 23:59:59' }
+    dummy1 = new events.Event do
+      id: 'd1'
+      start: @start.clone().add 3, 'days'
+      end: @start.clone().add 7, 'days'
+      payload: 99
+      type: 'booking'
+      
+    dummy2 = new events.Event do
+      id: 'd2'
+      start: @start.clone().add 9, 'days'
+      end: @start.clone().add 17, 'days'
+      payload: 99
+      type: 'booking'
 
 
-    console.log String newe
-    console.log String olde
-    console.log String olde.diff newe
+    dummies = new events.MemEvents [ dummy1, dummy2 ]
 
-    resolve true
+#    targets = @events.clone()
+    targets = new events.MemEvents()
+
+    targets
+      .pushm new events.Event {
+        id: 'ea4'
+        start: @start.clone().add 15, 'days'
+        end: @start.clone().add 20, 'days'
+        payload: 175 }
+        
+    targets
+      .pushm new events.Event {
+        id: 'ea0'
+        start: @start.clone()
+        end: @start.clone().add 1, 'days'
+        type: 'price'
+        payload: 123}
+        
+    targets
+      .pushm new events.Event {
+        id: 'eBooking1'
+        start: @start.clone().subtract 2, 'days'
+        end: @start.clone()
+        type: 'booking'
+        payload: 99}
+
+    targets.pushm do
+      id: 'eBooking2'
+      type: 'booking',
+      start: @start.clone().add 4, 'days'
+      end: @start.clone().add 11, 'days'
+      payload: 99
+
+
+    rtargets = targets.filter type: 'booking'
+    create = dummies.subtract rtargets
+    remove = rtargets.subtract dummies
+    res = targets.subtract(remove).pushm create
+    eventGrapher.drawEvents 'diff-change-merge', targets, rtargets, dummies, create, remove, res
+    .then resolve
+    

@@ -65,7 +65,7 @@ EventLike = exports.EventLike = class EventLike
   # ( Events ) -> Events
   relevantEvents: (events) ->
     parse.events events
-    .filter range: @ #, type: @type ## TODO
+    .filter range: @range(), type: @type
 
   neighbours: (events) ->
     [
@@ -136,7 +136,7 @@ Event = exports.Event = class Event extends EventLike
     
   isSamePayload: (event) ->
     event = parse.event event
-    @type is event.type and @payload is event.payload
+    (@type is event.type) and (@payload is event.payload)
   
   clone: (data={}) ->
     ret = new Event assign {}, @, { id: @id + '-clone'}, data
@@ -145,7 +145,7 @@ Event = exports.Event = class Event extends EventLike
 
   # () -> Json
   serialize: ->
-    assign {}, @, mapValues (pick @, <[ start end ]>), (value) -> value.format "YYYY-MM-DD HH:mm:ss"
+    pick(@, <[type payload id tags]>) <<< mapValues (pick @, <[ start end ]>), (value) -> value.format "YYYY-MM-DD HH:mm:ss"
 
   # () -> String
   toString: ->
@@ -197,12 +197,12 @@ PersistLayer = exports.PersistLayer = class
 # and some uncommon operations related to time (collide, subtract)
  
 Events = exports.Events = class Events extends EventLike
+  (...events) -> @pushm.apply @, events
 
   # per day data (airbnb api helper)
   days: (cb) -> @each (event) -> event.range!by 'days', ~> cb it, event
 
   isEvents: true
-  (...events) -> @pushm.apply @, events
 
   # ( MomentRange, Object ) -> Events
   _find: (range, pattern) -> ...
@@ -214,7 +214,7 @@ Events = exports.Events = class Events extends EventLike
   pushm: (eventCollection) -> true
 
   # ( EventCollection) -> Events
-  push: (eventCollection) -> @clone events
+  push: (eventCollection) -> @clone eventCollection
 
   # () -> Events
   without: ->  ...
@@ -239,7 +239,7 @@ Events = exports.Events = class Events extends EventLike
     ret = []
     @each (event) -> ret.push cb event
     ret
-            
+                                    
   # ( (Events, Event) -> Events ) -> Array<any>
   rawReduce: (cb, memo) ->
     @each (event) -> memo := cb memo, event
@@ -276,7 +276,6 @@ Events = exports.Events = class Events extends EventLike
       collisions = event.relevantEvents diff
       if not collisions.length then return diff
       else
-      
         return diff.popm(collisions).pushm collisions.reduce (res, collision) ->
           [ range, payload ] = event.compare collision
           
@@ -350,7 +349,7 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
 
   _rangeSearch: (range) ->
     filter @events, ->
-      range.contains it.start or range.contains it.end or it.range!.contains range
+      range.contains it.start.clone().add(1) or range.contains it.end.clone().subtract(1) or it.range!.contains range
                   
   _filter: (range, pattern) ->
     ret = new MemEvents()
