@@ -157,7 +157,7 @@ describe 'events', ->
     
     resolve!
     
-  specify 'diff-apply-merge', -> new p (resolve,reject) ~>
+  specify 'diff-update-merge', -> new p (resolve,reject) ~>
 
     dummy1 = new events.Event do
       id: 'd1'
@@ -201,11 +201,13 @@ describe 'events', ->
 
     diff = targets.diff dummies
 
-    [ create, remove ] = targets.apply diff
+    [ create, remove ] = targets.update diff
 
 #    merge = create.merge()
 #    console.log merge
-    eventGrapher.drawEvents 'diff-apply-merge', targets, dummies, diff, remove, create
+
+    res = targets.clone().subtract(remove).pushm create
+    eventGrapher.drawEvents 'diff-update-merge', targets, dummies, diff, remove, create, res
     resolve!
         
   specify 'neighbours', -> new p (resolve,reject) ~>
@@ -512,8 +514,7 @@ describe 'events', ->
       start: '2016-04-15 00:00:00',
       end: '2016-04-16 00:00:00',
       payload: 200 } ]
-    
-    
+        
   specify 'diff-change-merge', -> new p (resolve,reject) ~>
 
     dummy1 = new events.Event do
@@ -530,8 +531,13 @@ describe 'events', ->
       payload: 99
       type: 'booking'
 
-
     dummies = new events.MemEvents [ dummy1, dummy2 ]
+    .pushm new events.Event {
+        id: 'eBooking3'
+        type: 'booking'
+        start: @start.clone().add 21, 'days'
+        end: @start.clone().add 25, 'days'
+        payload: 99 }
 
 #    targets = @events.clone()
     targets = new events.MemEvents()
@@ -542,6 +548,14 @@ describe 'events', ->
         start: @start.clone().add 15, 'days'
         end: @start.clone().add 20, 'days'
         payload: 175 }
+        
+    targets
+      .pushm new events.Event {
+        id: 'eBooking3'
+        type: 'booking'
+        start: @start.clone().add 21, 'days'
+        end: @start.clone().add 25, 'days'
+        payload: 99 }
         
     targets
       .pushm new events.Event {
@@ -566,11 +580,19 @@ describe 'events', ->
       end: @start.clone().add 11, 'days'
       payload: 99
 
-
     rtargets = targets.filter type: 'booking'
-    create = dummies.subtract rtargets
-    remove = rtargets.subtract dummies
-    res = targets.subtract(remove).pushm create
-    eventGrapher.drawEvents 'diff-change-merge', targets, rtargets, dummies, create, remove, res
+    
+    busy = dummies.subtract rtargets
+    free = rtargets.subtract dummies, true
+
+    events = dummies.clone()
+    
+    [ create, remove ] = rtargets.reduce do
+      ([ create, remove ], event) ->
+        if not create.popm event then remove.pushm event
+        [ create, remove ]
+      [ dummies.clone(), new events.MemEvents() ]
+       
+    eventGrapher.drawEvents 'diff-change-merge', targets, dummies, rtargets, busy, free, create, remove
     .then resolve
     

@@ -86,7 +86,7 @@ EventLike = exports.EventLike = class EventLike
 
   # ( EventLike ) -> Events
   push: (event) -> ...
-  
+    
   # ( EventLike ) -> Events
   subtract: (something) ->
     if something instanceof Events then @subtractMany something
@@ -249,6 +249,12 @@ Events = exports.Events = class Events extends EventLike
   reduce: (cb, memo) ->
     if not memo then memo = new MemEvents()
     @rawReduce cb, memo
+    
+  # ( Event | { range: Range, ... } ) -> Events
+  find: (pattern) ->
+    @_find do
+      parse.range pattern.range
+      omit pattern, 'range'
 
   # ( { range: Range, ... } ) -> Events
   filter: (pattern) ->
@@ -287,7 +293,13 @@ Events = exports.Events = class Events extends EventLike
     events = parse.events events
     @reduce makeDiff, events.clone()
 
-  apply: (events) ->
+  # complately transforms the group of events, returning ranges added and removed, and db events to delete and create to apply the change
+  # ( Events ) -> [ Events, Events, Events, Events ]
+  change: (events) ~>
+    @reduce do
+      ([ create, remove ], event) ~> true
+
+  update: (events) ->
     @reduce do
       ([ create, remove ], event) ~>
 
@@ -340,8 +352,7 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
       type: {}
     super ...
   
-  without: (event) ->
-    new MemEvents filter (values @events), -> it.id isnt event.id
+  without: (event) -> new MemEvents filter (values @events), -> it.id isnt event.id
     
   toArray: -> values @events
 

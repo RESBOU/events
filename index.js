@@ -269,6 +269,7 @@
     function Events(){
       var events;
       events = slice$.call(arguments);
+      this.change = bind$(this, 'change', prototype);
       this.pushm.apply(this, events);
     }
     prototype.days = function(cb){
@@ -333,6 +334,9 @@
       }
       return this.rawReduce(cb, memo);
     };
+    prototype.find = function(pattern){
+      return this._find(parse.range(pattern.range), omit(pattern, 'range'));
+    };
     prototype.filter = function(pattern){
       return this._filter(parse.range(pattern.range), omit(pattern, 'range'));
     };
@@ -382,7 +386,15 @@
       events = parse.events(events);
       return this.reduce(makeDiff, events.clone());
     };
-    prototype.apply = function(events){
+    prototype.change = function(events){
+      var this$ = this;
+      return this.reduce(function(arg$, event){
+        var create, remove;
+        create = arg$[0], remove = arg$[1];
+        return true;
+      });
+    };
+    prototype.update = function(events){
       var this$ = this;
       return this.reduce(function(arg$, event){
         var create, remove, relevantEvents;
@@ -536,5 +548,8 @@
     var own = {}.hasOwnProperty;
     for (var key in src) if (own.call(src, key)) obj[key] = src[key];
     return obj;
+  }
+  function bind$(obj, key, target){
+    return function(){ return (target || obj)[key].apply(obj, arguments) };
   }
 }).call(this);
