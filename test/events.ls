@@ -581,17 +581,13 @@ describe 'events', ->
       payload: 99
 
     rtargets = targets.filter type: 'booking'
-    
-    busy = dummies.subtract rtargets
-    free = rtargets.subtract dummies, true
 
-    [ create, remove ] = rtargets.reduce do
-      ([ create, remove ], event) ->
-        if not create.has event then remove.pushm event
-        [ create, remove ]
-        
-      [ dummies.clone(), new events.MemEvents() ]
-       
-    eventGrapher.drawEvents 'diff-change-merge', targets, dummies, rtargets, busy, free, remove, create
+    [ busy, free, create, remove ] = rtargets.update dummies    
+
+    res = targets
+      .subtract remove
+      .pushm create
+                   
+    eventGrapher.drawEvents 'diff-change-merge', targets, dummies, rtargets, busy, free, remove, create, res
     .then resolve
     

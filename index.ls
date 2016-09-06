@@ -278,7 +278,6 @@ Events = exports.Events = class Events extends EventLike
     if not memo then memo = new MemEvents()
     @rawReduce cb, memo
 
-
   # ( Event ) -> Boolean
   has: (targetEvent) ->
     range = targetEvent.range!
@@ -332,17 +331,18 @@ Events = exports.Events = class Events extends EventLike
       ([ create, remove ], event) ~> true
 
   update: (events) ->
-    @reduce do
-      ([ create, remove ], event) ~>
-
-        if (relevantEvents = event.relevantEvents(events)).length
-          remove.pushm event
-          create.pushm event.subtract relevantEvents
-
-        [ create, remove ]
-
-      [ events.clone(), new MemEvents() ]
+    busy = events.subtract @
+    free = @subtract events
     
+    [ create, remove ] = @reduce do
+      ([ create, remove ], event) ->
+        if not create.has event then remove.pushm event
+        [ create, remove ]
+        
+      [ events.clone(), new MemEvents() ]
+
+    [ busy, free, create, remove ]
+            
   merge: ->
     @reduce (res, event) ~>
       event

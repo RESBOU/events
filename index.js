@@ -459,16 +459,18 @@
       });
     };
     prototype.update = function(events){
-      var this$ = this;
-      return this.reduce(function(arg$, event){
-        var create, remove, relevantEvents;
+      var busy, free, ref$, create, remove;
+      busy = events.subtract(this);
+      free = this.subtract(events);
+      ref$ = this.reduce(function(arg$, event){
+        var create, remove;
         create = arg$[0], remove = arg$[1];
-        if ((relevantEvents = event.relevantEvents(events)).length) {
+        if (!create.has(event)) {
           remove.pushm(event);
-          create.pushm(event.subtract(relevantEvents));
         }
         return [create, remove];
-      }, [events.clone(), new MemEvents()]);
+      }, [events.clone(), new MemEvents()]), create = ref$[0], remove = ref$[1];
+      return [busy, free, create, remove];
     };
     prototype.merge = function(){
       var this$ = this;
