@@ -69,6 +69,8 @@ Matcher = (range, pattern, event) -->
     if range then return range.contains event.start.clone().add(1) or range.contains event.end.clone().subtract(1) or event.range!.contains range
     else return true
 
+  checkRangeStrict = (event) -> range.isEqual event.range!
+
   checkPattern = (event) ->
     not find pattern, (value, key) ->
       if value is true then return not event[key]?
@@ -276,7 +278,11 @@ Events = exports.Events = class Events extends EventLike
     if not memo then memo = new MemEvents()
     @rawReduce cb, memo
 
-  has: -> @find(it)?
+
+  # ( Event ) -> Boolean
+  has: (targetEvent) ->
+    range = targetEvent.range!
+    @_find (event) -> event.payload is targetEvent.payload and event.range!isSame range
             
   # ( Event | { range: Range, ... } ) -> Events
   find: ->

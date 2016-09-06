@@ -92,13 +92,16 @@
     }
   };
   Matcher = curry$(function(range, pattern, event){
-    var checkRange, checkPattern;
+    var checkRange, checkRangeStrict, checkPattern;
     checkRange = function(event){
       if (range) {
         return range.contains(event.start.clone().add(1)) || range.contains(event.end.clone().subtract(1)) || event.range().contains(range);
       } else {
         return true;
       }
+    };
+    checkRangeStrict = function(event){
+      return range.isEqual(event.range());
     };
     checkPattern = function(event){
       return !find(pattern, function(value, key){
@@ -378,8 +381,12 @@
       }
       return this.rawReduce(cb, memo);
     };
-    prototype.has = function(it){
-      return this.find(it) != null;
+    prototype.has = function(targetEvent){
+      var range;
+      range = targetEvent.range();
+      return this._find(function(event){
+        return event.payload === targetEvent.payload && event.range().isSame(range);
+      });
     };
     prototype.find = function(it){
       var matcher;

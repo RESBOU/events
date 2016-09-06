@@ -532,12 +532,12 @@ describe 'events', ->
       type: 'booking'
 
     dummies = new events.MemEvents [ dummy1, dummy2 ]
-    .pushm new events.Event {
-        id: 'eBooking3'
-        type: 'booking'
-        start: @start.clone().add 21, 'days'
-        end: @start.clone().add 25, 'days'
-        payload: 99 }
+    # .pushm new events.Event {
+    #    id: 'eBooking3'
+    #    type: 'booking'
+    #    start: @start.clone().add 21, 'days'
+    #    end: @start.clone().add 25, 'days'
+    #    payload: 99 }
 
 #    targets = @events.clone()
     targets = new events.MemEvents()
@@ -589,8 +589,9 @@ describe 'events', ->
       ([ create, remove ], event) ->
         if not create.has event then remove.pushm event
         [ create, remove ]
+        
       [ dummies.clone(), new events.MemEvents() ]
        
-    eventGrapher.drawEvents 'diff-change-merge', targets, dummies, rtargets, busy, free, create, remove
+    eventGrapher.drawEvents 'diff-change-merge', targets, dummies, rtargets, busy, free, remove, create
     .then resolve
     
