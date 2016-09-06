@@ -585,11 +585,9 @@ describe 'events', ->
     busy = dummies.subtract rtargets
     free = rtargets.subtract dummies, true
 
-    events = dummies.clone()
-    
     [ create, remove ] = rtargets.reduce do
       ([ create, remove ], event) ->
-        if not create.popm event then remove.pushm event
+        if not create.has event then remove.pushm event
         [ create, remove ]
       [ dummies.clone(), new events.MemEvents() ]
        

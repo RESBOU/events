@@ -1,5 +1,5 @@
 (function(){
-  var p, ref$, w, find, omit, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues, moment, momentRange, format, parse, EventLike, parseInit, Event, PersistLayer, Events, MemEvents, MemEventsNaive, slice$ = [].slice;
+  var p, ref$, w, find, omit, filter, pick, keys, values, pop, assign, each, reduce, flattenDeep, push, map, mapValues, moment, momentRange, format, parse, Matcher, EventLike, parseInit, Event, PersistLayer, Events, MemEvents, MemEventsNaive, slice$ = [].slice;
   p = require('bluebird');
   ref$ = require('leshdash'), w = ref$.w, find = ref$.find, omit = ref$.omit, filter = ref$.filter, pick = ref$.pick, keys = ref$.keys, values = ref$.values, pop = ref$.pop, assign = ref$.assign, each = ref$.each, reduce = ref$.reduce, flattenDeep = ref$.flattenDeep, push = ref$.push, map = ref$.map, mapValues = ref$.mapValues, omit = ref$.omit;
   moment = require('moment');
@@ -8,6 +8,22 @@
     return it.format('YYYY-MM-DD');
   };
   parse = exports.parse = {
+    pattern: function(it){
+      switch (false) {
+      case (it != null ? it.isEvent : void 8) == null:
+        return [
+          it.range(), {
+            payload: it.payload
+          }
+        ];
+      case !((it != null ? it.constructor : void 8) === Object && it.range != null):
+        return [parse.range(it.range), omit(it, 'range')];
+      case (it != null ? it.constructor : void 8) !== Object:
+        return [false, it];
+      default:
+        throw new Error("invalid type for patern " + (it != null ? typeof it.toString == 'function' ? it.toString() : void 8 : void 8) + " " + (it != null ? it.constructor : void 8));
+      }
+    },
     event: function(it){
       if ((it != null ? it.isEvent : void 8) != null) {
         return it;
@@ -75,6 +91,34 @@
       }
     }
   };
+  Matcher = curry$(function(range, pattern, event){
+    var checkRange, checkPattern;
+    checkRange = function(event){
+      if (range) {
+        return range.contains(event.start.clone().add(1)) || range.contains(event.end.clone().subtract(1)) || event.range().contains(range);
+      } else {
+        return true;
+      }
+    };
+    checkPattern = function(event){
+      return !find(pattern, function(value, key){
+        if (value === true) {
+          return event[key] == null;
+        } else {
+          if (!moment.isMoment(value)) {
+            if (event[key] === value) {
+              return false;
+            } else {
+              return true;
+            }
+          } else {
+            return !value.isSame(event[key]);
+          }
+        }
+      });
+    };
+    return checkRange(event) && checkPattern(event);
+  });
   EventLike = exports.EventLike = EventLike = (function(){
     EventLike.displayName = 'EventLike';
     var prototype = EventLike.prototype, constructor = EventLike;
@@ -281,11 +325,11 @@
       });
     };
     prototype.isEvents = true;
-    prototype._find = function(range, pattern){
+    prototype.find = function(range, pattern){
       throw Error('unimplemented');
     };
     prototype.pushm = function(eventCollection){
-      return true;
+      throw Error('unimplemented');
     };
     prototype.push = function(eventCollection){
       return this.clone(eventCollection);
@@ -294,7 +338,7 @@
       throw Error('unimplemented');
     };
     prototype.each = function(cb){
-      return this._each(cb);
+      throw Error('unimplemented');
     };
     prototype.toString = function(){
       return ("E[" + this.length + "] < ") + this.map(function(event){
@@ -334,11 +378,24 @@
       }
       return this.rawReduce(cb, memo);
     };
-    prototype.find = function(pattern){
-      return this._find(parse.range(pattern.range), omit(pattern, 'range'));
+    prototype.has = function(it){
+      return this.find(it) != null;
+    };
+    prototype.find = function(it){
+      var matcher;
+      matcher = Matcher.apply(this, parse.pattern(it));
+      return this._find(matcher);
     };
     prototype.filter = function(pattern){
-      return this._filter(parse.range(pattern.range), omit(pattern, 'range'));
+      var matcher;
+      matcher = Matcher.apply(this, parse.pattern(pattern));
+      return this.reduce(function(ret, event){
+        if (matcher(event)) {
+          return ret.pushm(event);
+        } else {
+          return ret;
+        }
+      });
     };
     prototype.updatePrice = function(priceData){
       var this$ = this;
@@ -459,43 +516,11 @@
     prototype.toArray = function(){
       return values(this.events);
     };
-    prototype._each = function(cb){
+    prototype.each = function(cb){
       return each(this.events, cb);
     };
-    prototype._rangeSearch = function(range){
-      return filter(this.events, function(it){
-        return range.contains(it.start.clone().add(1)) || range.contains(it.end.clone().subtract(1)) || it.range().contains(range);
-      });
-    };
-    prototype._filter = function(range, pattern){
-      var ret, events, checkPattern;
-      ret = new MemEvents();
-      if (range) {
-        events = this._rangeSearch(range);
-      } else {
-        events = values(this.events);
-      }
-      checkPattern = function(pattern){
-        return function(event){
-          return !find(pattern, function(value, key){
-            if (value === true) {
-              return event[key] == null;
-            } else {
-              if (!moment.isMoment(value)) {
-                if (event[key] === value) {
-                  return false;
-                } else {
-                  return true;
-                }
-              } else {
-                return !value.isSame(event[key]);
-              }
-            }
-          });
-        };
-      };
-      ret.pushm(filter(events, checkPattern(pattern)));
-      return ret;
+    prototype._find = function(cb){
+      return find(this.events, cb);
     };
     prototype.clone = function(range){
       return new MemEvents(values(this.events));
@@ -538,6 +563,19 @@
     };
     return MemEventsNaive;
   }(Events));
+  function curry$(f, bound){
+    var context,
+    _curry = function(args) {
+      return f.length > 1 ? function(){
+        var params = args ? args.concat() : [];
+        context = bound ? context || this : this;
+        return params.push.apply(params, arguments) <
+            f.length && arguments.length ?
+          _curry.call(context, params) : f.apply(context, params);
+      } : f;
+    };
+    return _curry();
+  }
   function extend$(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;

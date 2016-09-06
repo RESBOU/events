@@ -10,11 +10,17 @@ require! {
 # * Type coercion functions for a more chilled out API
 format = exports.format = -> it.format 'YYYY-MM-DD'
 
-parse = exports.parse = do 
+parse = exports.parse = do
+
+  pattern: ->
+    | it?isEvent? => [ it.range!, payload: it.payload ]
+    | it?@@ is Object and it.range? => [ parse.range(it.range), omit(it, 'range') ]
+    | it?@@ is Object => [ false, it ]
+    | otherwise => throw new Error "invalid type for patern #{it?toString?!} #{it?@@}"
+    
   # (any) -> Event | Error
   event: ->
     if it?isEvent? then return it
-      
     switch it?@@
       | Object => new Event it
       | otherwise =>
@@ -55,6 +61,26 @@ parse = exports.parse = do
       | Events => Events.toArray()
       | Array => flattenDeep something
       | otherwise => throw 'what is this'
+
+
+Matcher = (range, pattern, event) -->
+  
+  checkRange = (event) ->
+    if range then return range.contains event.start.clone().add(1) or range.contains event.end.clone().subtract(1) or event.range!.contains range
+    else return true
+
+  checkPattern = (event) ->
+    not find pattern, (value, key) ->
+      if value is true then return not event[key]?
+      else
+        if not moment.isMoment value
+          if event[key] is value then return false else return true
+        else
+          return not value.isSame event[key]
+
+  checkRange(event) and checkPattern(event)
+
+
 
 # * EventLike
 # more of a spec then anything, this is implemented by Event & Events
@@ -205,13 +231,13 @@ Events = exports.Events = class Events extends EventLike
   isEvents: true
 
   # ( MomentRange, Object ) -> Events
-  _find: (range, pattern) -> ...
+  find: (range, pattern) -> ...
     
   # ( rangeEquivalent ) -> Events
 #  clone: (rangeEquivalent) ~> ...
 
   # ( EventCollection) -> Events
-  pushm: (eventCollection) -> true
+  pushm: (eventCollection) -> ...
 
   # ( EventCollection) -> Events
   push: (eventCollection) -> @clone eventCollection
@@ -220,7 +246,7 @@ Events = exports.Events = class Events extends EventLike
   without: ->  ...
 
   # ( Function ) -> void
-  each: (cb) -> @_each cb
+  each: (cb) -> ...
 
   # () -> String
   toString: -> "E[#{@length}] < " + (@map (event) -> "" + event).join(", ") + " >"
@@ -249,19 +275,19 @@ Events = exports.Events = class Events extends EventLike
   reduce: (cb, memo) ->
     if not memo then memo = new MemEvents()
     @rawReduce cb, memo
-    
+
+  has: -> @find(it)?
+            
   # ( Event | { range: Range, ... } ) -> Events
-  find: (pattern) ->
-    @_find do
-      parse.range pattern.range
-      omit pattern, 'range'
-
+  find: ->
+    matcher = Matcher.apply @, parse.pattern it
+    @_find matcher
+    
   # ( { range: Range, ... } ) -> Events
-  filter: (pattern) ->
-    @_filter do
-      parse.range pattern.range
-      omit pattern, 'range'
-
+  filter: ( pattern )->
+    matcher = Matcher.apply @, parse.pattern pattern
+    @reduce (ret, event) -> if matcher event then ret.pushm event else ret
+    
   # ( Events ) -> Events
   updatePrice: (priceData) ->    
     parse.events priceData
@@ -356,33 +382,11 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
     
   toArray: -> values @events
 
-  _each: (cb) -> each @events, cb
+  each: (cb) -> each @events, cb
+  
+  _find: (cb) -> find @events, cb
 
-  _rangeSearch: (range) ->
-    filter @events, ->
-      range.contains it.start.clone().add(1) or range.contains it.end.clone().subtract(1) or it.range!.contains range
-                  
-  _filter: (range, pattern) ->
-    ret = new MemEvents()
-    
-    if range then events = @_rangeSearch range
-    else events = values @events
-
-    checkPattern = (pattern) ->
-      (event) ->
-        not find pattern, (value, key) ->
-          if value is true then return not event[key]?
-          else
-            if not moment.isMoment value
-              if event[key] is value then return false else return true
-            else
-              return not value.isSame event[key]
-              
-    ret.pushm filter events, checkPattern pattern
-    ret
-
-  clone: (range) ->
-    new MemEvents values @events
+  clone: (range) -> new MemEvents values @events
 
   popm: (...events) -> 
     each parse.eventArray(events), (event) ~>
