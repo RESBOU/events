@@ -10,8 +10,7 @@ require! {
 # * Type coercion functions for a more chilled out API
 format = exports.format = -> it.format 'YYYY-MM-DD'
 
-parse = exports.parse = do
-
+parse = exports.parse = mapValues do
   pattern: ->
     | it?isEvent? => [ it.range!, payload: it.payload ]
     | it?@@ is Object and it.range? => [ parse.range(it.range), omit(it, 'range') ]
@@ -52,6 +51,7 @@ parse = exports.parse = do
       | Event => something.range!
       | MemEvents => something.range!
       | otherwise => something.range?! or something
+
     
 # ( Events | Array<Event> | Event | void ) -> Array<Event>
   eventCollection: (something) ->
@@ -62,6 +62,8 @@ parse = exports.parse = do
       | Array => flattenDeep something
       | otherwise => throw 'what is this'
 
+  ( f, name ) -> -> f if it?@@ is Function then it! else it
+    
 
 Matcher = (range, pattern, event) -->
   
@@ -325,12 +327,8 @@ Events = exports.Events = class Events extends EventLike
     @reduce makeDiff, events.clone()
 
   # complately transforms the group of events, returning ranges added and removed, and db events to delete and create to apply the change
-  # ( Events ) -> [ Events, Events, Events, Events ]
-  change: (events) ~>
-    @reduce do
-      ([ create, remove ], event) ~> true
-
-  update: (events) ->
+  # ( Events ) -> { busy: Events, free: Events, create: Events, remove: Events }
+  change: (events) ->
     busy = events.subtract @
     free = @subtract events
     
@@ -341,7 +339,23 @@ Events = exports.Events = class Events extends EventLike
         
       [ events.clone(), new MemEvents() ]
 
-    [ busy, free, create, remove ]
+    busy: busy, free: free, create: create, remove: remove
+
+        
+  # upates events
+  # ( Events ) -> Events
+  update: (events) ->
+    @reduce do
+      ([ create, remove ], event) ~>
+
+        if (relevantEvents = event.relevantEvents(events)).length
+          remove.pushm event
+          create.pushm event.subtract relevantEvents
+
+        [ create, remove ]
+
+      [ events.clone(), new MemEvents() ]
+
             
   merge: ->
     @reduce (res, event) ~>

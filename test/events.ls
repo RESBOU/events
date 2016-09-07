@@ -203,10 +203,9 @@ describe 'events', ->
 
     [ create, remove ] = targets.update diff
 
-#    merge = create.merge()
-#    console.log merge
-
     res = targets.clone().subtract(remove).pushm create
+    
+    
     eventGrapher.drawEvents 'diff-update-merge', targets, dummies, diff, remove, create, res
     resolve!
         
@@ -582,7 +581,7 @@ describe 'events', ->
 
     rtargets = targets.filter type: 'booking'
 
-    [ busy, free, create, remove ] = rtargets.update dummies    
+    { busy, free, create, remove } = rtargets.change dummies
 
     res = targets
       .subtract remove
