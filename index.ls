@@ -143,8 +143,8 @@ parseInit = (data) ->
     data.end = data.range.end
     delete data.range
 
-  if data.start?@@ is String then data.start = moment data.start
-  if data.end?@@ is String then data.end = moment data.end
+  if data.start?@@ in [ String, Date ] then data.start = moment data.start
+  if data.end?@@ in [ String, Date ] then data.end = moment data.end
     
   if data@@ isnt Object then return "wut wut"
   else return data
@@ -328,20 +328,16 @@ Events = exports.Events = class Events extends EventLike
 
   # complately transforms the group of events, returning ranges added and removed, and db events to delete and create to apply the change
   # ( Events ) -> { busy: Events, free: Events, create: Events, remove: Events }
-  change: (events) ->
-    busy = events.subtract @
-    free = @subtract events
-    
-    [ create, remove ] = @reduce do
-      ([ create, remove ], event) ->
-        if not create.has event then remove.pushm event
-        [ create, remove ]
-        
-      [ events.clone(), new MemEvents() ]
+  change: (newEvents) ->
+    newEvents = parse.events newEvents
+    busy = newEvents.subtract @
+    free = @subtract newEvents
 
+    create = newEvents.reduce (create, event) ~> if not @has event then create.pushm event else create
+    remove = @reduce (remove, event) -> if not newEvents.has event then remove.pushm event else remove
+        
     busy: busy, free: free, create: create, remove: remove
 
-        
   # upates events
   # ( Events ) -> Events
   update: (events) ->

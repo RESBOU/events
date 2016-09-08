@@ -423,7 +423,6 @@ describe 'events', ->
 
   specify 'bookingUpdate', -> new p (resolve,reject) ~>
 
-
     dummy1 = new events.Event do
       id: 'd1'
       start: @start.clone().add 6, 'days'
@@ -514,7 +513,10 @@ describe 'events', ->
       end: '2016-04-16 00:00:00',
       payload: 200 } ]
         
-  specify 'diff-change-merge', -> new p (resolve,reject) ~>
+
+
+
+  specify 'change', -> new p (resolve,reject) ~>
 
     dummy1 = new events.Event do
       id: 'd1'
@@ -531,12 +533,12 @@ describe 'events', ->
       type: 'booking'
 
     dummies = new events.MemEvents [ dummy1, dummy2 ]
-    # .pushm new events.Event {
-    #    id: 'eBooking3'
-    #    type: 'booking'
-    #    start: @start.clone().add 21, 'days'
-    #    end: @start.clone().add 25, 'days'
-    #    payload: 99 }
+    .pushm new events.Event {
+       id: 'eBooking3'
+       type: 'booking'
+       start: @start.clone().add 21, 'days'
+       end: @start.clone().add 25, 'days'
+       payload: 99 }
 
 #    targets = @events.clone()
     targets = new events.MemEvents()
@@ -581,12 +583,17 @@ describe 'events', ->
 
     rtargets = targets.filter type: 'booking'
 
+    { busy, free, create, remove } = rtargets.change rtargets.clone!
+
+    expect busy.length + free.length + create.length + remove.length
+    .to.equal 0
+
     { busy, free, create, remove } = rtargets.change dummies
 
     res = targets
       .subtract remove
       .pushm create
                    
-    eventGrapher.drawEvents 'diff-change-merge', targets, dummies, rtargets, busy, free, remove, create, res
+    eventGrapher.drawEvents 'change', targets, dummies, rtargets, busy, free, remove, create, res
     .then resolve
     
