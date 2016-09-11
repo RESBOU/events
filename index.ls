@@ -75,15 +75,20 @@ Matcher = (range, pattern, event) -->
 
   checkPattern = (event) ->
     not find pattern, (value, key) ->
-      if value is true then return not event[key]?
-      else
-        if not moment.isMoment value
-          if event[key] is value then return false else return true
-        else
-          return not value.isSame event[key]
+      switch value@@
+      
+        | Boolean =>
+          if value is true then return not event[key]?
+          else return event[key]?
+          
+        | Function => not value event[key]
+
+        | otherwise =>
+          if moment.isMoment value then not value.isSame event[key]
+          else if event[key] is value then return false else return true
+   
 
   checkRange(event) and checkPattern(event)
-
 
 
 # * EventLike
@@ -292,24 +297,10 @@ Events = exports.Events = class Events extends EventLike
     
   # ( { range: Range, ... } ) -> Events
   filter: ( pattern )->
+    
     matcher = Matcher.apply @, parse.pattern pattern
     @reduce (ret, event) -> if matcher event then ret.pushm event else ret
     
-  # ( Events ) -> Events
-  updatePrice: (priceData) ->    
-    parse.events priceData
-    .reduce (res, event) ~>
-
-      targets = event.relevantEvents @
-      
-      if not targets.length then return res.pushm event
-        
-      res.pushm targets.collide event, (event1, event2) ->
-        if event1.price is event2.price
-          res.pushm event2.clone range: event1.range!add event2.range!
-        else
-          res.pushm [ event1, event2.subtract(event1) ]
-
   diff: (events) ->
     makeDiff = (diff, event) ~>
       collisions = event.relevantEvents diff
@@ -351,7 +342,6 @@ Events = exports.Events = class Events extends EventLike
         [ create, remove ]
 
       [ events.clone(), new MemEvents() ]
-
             
   merge: ->
     @reduce (res, event) ~>
