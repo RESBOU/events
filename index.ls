@@ -75,8 +75,9 @@ Matcher = (range, pattern, event) -->
 
   checkPattern = (event) ->
     not find pattern, (value, key) ->
-      switch value@@
-      
+      switch value?@@
+        | undefined => return true
+        
         | Boolean =>
           if value is true then return not event[key]?
           else return event[key]?
@@ -297,7 +298,6 @@ Events = exports.Events = class Events extends EventLike
     
   # ( { range: Range, ... } ) -> Events
   filter: ( pattern )->
-    
     matcher = Matcher.apply @, parse.pattern pattern
     @reduce (ret, event) -> if matcher event then ret.pushm event else ret
     
