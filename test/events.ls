@@ -284,6 +284,8 @@ describe 'events', ->
 
     resolve!
 
+
+
   specify 'collideOne', -> new p (resolve,reject) ~>
 
     crashDummy = new events.Event do
@@ -310,8 +312,8 @@ describe 'events', ->
     eventGrapher.drawEvents 'collideOne', crashDummy, @events, res1, res2, res3
     
     resolve!
-    
-    
+
+        
   specify 'collideMany', -> new p (resolve,reject) ~>
     crashDummys1 = new events.MemEvents do
       new events.Event do

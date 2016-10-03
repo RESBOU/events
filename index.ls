@@ -76,18 +76,17 @@ Matcher = (range, pattern, event) -->
   checkPattern = (event) ->
     not find pattern, (value, key) ->
       switch value?@@
-        | undefined => return true
+        | undefined => true
         
         | Boolean =>
-          if value is true then return not event[key]?
-          else return event[key]?
+          if value then not event[key]?
+          else event[key]?
           
         | Function => not value event[key]
 
         | otherwise =>
           if moment.isMoment value then not value.isSame event[key]
-          else if event[key] is value then return false else return true
-   
+          else if event[key] is value then false else true
 
   checkRange(event) and checkPattern(event)
 
