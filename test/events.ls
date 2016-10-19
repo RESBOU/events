@@ -16,7 +16,7 @@ require! {
 
 xspecify = -> true
 
-describe 'events', ->
+describe 'timeEvents', ->
   before -> new p (resolve,reject) ~>
      
     e = do

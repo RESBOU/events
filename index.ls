@@ -199,8 +199,9 @@ Event = exports.Event = class Event extends EventLike
   # ( Event ) -> Events
   subtractOne: (event) ->
     cnt = 0
+    range = event.range()
     new MemEvents map do
-      @range().subtract event.range()
+      @range().subtract range
       ~> @clone { start: it.start, end: it.end, id: @id + '-' + cnt++ } # get rid of potential old repr, this is a new event
 
   # ( Events, (Event, Event) -> Events ) -> Events
