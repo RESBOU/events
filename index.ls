@@ -180,7 +180,7 @@ Event = exports.Event = class Event extends EventLike
 
   # () -> Json
   serialize: ->
-    pick(@, <[type payload id tags]>) <<< mapValues (pick @, <[ start end ]>), (value) -> value.format "YYYY-MM-DD HH:mm:ss"
+    pick(@, <[type payload id tags]>) <<< mapValues (pick @, <[ start end ]>), (value) -> value.format "YYYY-MM-DD HH:mm"
 
   # () -> String
   toString: ->
@@ -200,10 +200,13 @@ Event = exports.Event = class Event extends EventLike
   subtractOne: (event) ->
     cnt = 0
     range = event.range()
+    range.start.subtract 1
+    range.end.add 1, 'minutes'
+    
     new MemEvents map do
       @range().subtract range
       ~> @clone { start: it.start, end: it.end, id: @id + '-' + cnt++ } # get rid of potential old repr, this is a new event
-
+:
   # ( Events, (Event, Event) -> Events ) -> Events
   collide: (events, cb) ->
     @relevantEvents events
@@ -368,7 +371,6 @@ Events = exports.Events = class Events extends EventLike
   subtractMany: (events) ->
     @reduce (ret, child) -> ret.pushm child.subtractMany events
 
-  
 # * MemEvents
 # In memory Event collection implementation,
 # this is a very naive implementation

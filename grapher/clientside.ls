@@ -102,7 +102,7 @@ socket.on 'reconnect', -> window.location.reload!
 data.data = parseDates (-> new moment it), data.data
 
 data.data
-  |> parseDates -> it.format('YYYY-MM-DD')
+  |> parseDates -> it.format('YYYY-MM-DD hh:mm:ss')
   |> drawText 
 
 

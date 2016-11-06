@@ -51,14 +51,14 @@ describe 'timeEvents', ->
       id: "event1"
       type: "price"
       start: @start.clone().add 1 'days'
-      end: @start.clone().add 3 'days'
+      end: @start.clone().add(3 'days').endOf('day')
       payload: 300
 
     @event2 = new events.Event do
       id: 'event2'
       type: "price"
       start: @start.clone().add 2 'days'
-      end: @start.clone().add 4 'days'
+      end: @start.clone().add(4 'days').endOf('day')
       payload: 600
 
     resolve!
@@ -367,15 +367,29 @@ describe 'timeEvents', ->
     resolve!
 
   specify 'subOne2One', -> new p (resolve,reject) ~>
-    serialize1 = [ @event1.serialize(), @event2.serialize() ]
-    
-    res = (@event1.subtract @event2)
+    target = new events.Event (new events.Event do
+      id: "target"
+      type: "price"
+      start: @start.clone()
+      end: @start.clone().add(4 'days').endOf('day')
+      payload: 300).serialize()
+      
+    subtractor = new events.Event (new events.Event do
+      id: "subtractor"
+      type: "price"
+      start: @start.clone().add 2 'days'
+      end: @start.clone().add(2 'days').endOf('day')
+      payload: 60).serialize()
+      
+    serialize1 = [ target.serialize(), subtractor.serialize() ]
+
+    res = (target.subtract subtractor)
 
     # subtract should be immutable!
-    expect [ @event1.serialize(), @event2.serialize() ]
+    expect [ target.serialize(), subtractor.serialize() ]
     .to.deep.equal serialize1
 
-    eventGrapher.drawEvents 'subOne2One', @event2, @event1, res
+    eventGrapher.drawEvents 'subOne2One', target, subtractor, res
     .then resolve
 
     expect res.serialize()
