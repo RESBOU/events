@@ -85,8 +85,11 @@ describe 'timeEvents', ->
     
     expect event1.end.format('X')
     .to.equal @event1.end.format('X')
+  
+    ## this won't work, because our serialization precision is 1 second
+    #expect event1.end.format('x')
+    #.to.equal @event1.end.format('x')
     
-
     expect data        
     .to.deep.equal { id: "event1", start: '2016-04-02T00:00:00Z', end: '2016-04-04T23:59:59Z', payload: 300, type: 'price' }
     
