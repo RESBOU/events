@@ -91,7 +91,6 @@ drawText = (data) ->
   json.html jsonPrint.prettyPrint data
   $('.json').append json
 
-
 # * Socket
 socket = io window.location.host
 socket.on 'connect', -> console.log 'connected'
@@ -99,10 +98,10 @@ socket.on 'update', -> if it is data.id then window.location.reload!
 socket.on 'graphs', -> showGraphs it
 socket.on 'reconnect', -> window.location.reload!
 
-data.data = parseDates (-> new moment it), data.data
+data.data = parseDates (-> new moment.utc it), data.data
 
 data.data
-  |> parseDates -> it.format('YYYY-MM-DD hh:mm:ss')
+  |> parseDates -> it.format()
   |> drawText 
 
 

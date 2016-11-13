@@ -1,4 +1,5 @@
 # autocompile
+
 # * require
 require! {
   bluebird: p
@@ -142,17 +143,21 @@ EventLike = exports.EventLike = class EventLike
 
 parseInit = (data) ->
   if not data then return {}
+  if data@@ isnt Object then return "wut wut"
+  data = {} <<< data
+    
   if data.center then return { start: data.start, end: data.end }
+    
   if data.range
     data.start = data.range.start
     data.end = data.range.end
     delete data.range
+  
+  if data.start?@@ in [ Date, String ] then data.start = moment.utc data.start
 
-  if data.start?@@ in [ String, Date ] then data.start = moment data.start
-  if data.end?@@ in [ String, Date ] then data.end = moment data.end
+  if data.end?@@ in [ Date, String ] then data.end = moment.utc data.end
     
-  if data@@ isnt Object then return "wut wut"
-  else return data
+  return data
 
 Event = exports.Event = class Event extends EventLike
   isEvent: true
@@ -180,7 +185,7 @@ Event = exports.Event = class Event extends EventLike
 
   # () -> Json
   serialize: ->
-    pick(@, <[type payload id tags]>) <<< mapValues (pick @, <[ start end ]>), (value) -> value.format "YYYY-MM-DD HH:mm"
+    pick(@, <[type payload id tags]>) <<< mapValues (pick @, <[ start end ]>), (value) -> value.format()
 
   # () -> String
   toString: ->
@@ -200,13 +205,13 @@ Event = exports.Event = class Event extends EventLike
   subtractOne: (event) ->
     cnt = 0
     range = event.range()
-    range.start.subtract 1
-    range.end.add 1, 'minutes'
+    range.start.subtract 1, 'second'
+    range.end.add 1 'second'
     
     new MemEvents map do
       @range().subtract range
       ~> @clone { start: it.start, end: it.end, id: @id + '-' + cnt++ } # get rid of potential old repr, this is a new event
-:
+      
   # ( Events, (Event, Event) -> Events ) -> Events
   collide: (events, cb) ->
     @relevantEvents events

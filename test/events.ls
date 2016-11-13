@@ -10,7 +10,7 @@ require! {
   moment
   'moment-range'
 
-  '../index': events
+  '../index': { Event }:events
   '../grapher/client': eventGrapher
 }
 
@@ -22,7 +22,7 @@ describe 'timeEvents', ->
     e = do
       type: 'price'
       
-    @start = start = new moment('2016-04-23T00:00:00+02:00')
+    @start = start = new moment.utc('2016-04-23T00:00:00')
     .startOf 'month'
 
     eventArray = []
@@ -74,8 +74,21 @@ describe 'timeEvents', ->
 
     
   specify 'serializeOne', -> new p (resolve,reject) ~>
-    expect @event1.serialize()
-    .to.deep.equal { id: "event1", start: '2016-04-02 00:00:00', end: '2016-04-04 00:00:00', payload: 300, type: 'price' }
+    data = @event1.serialize()
+
+    event1 = new Event data
+    expect event1.end.format()
+    .to.be.equal event1.end.format()
+
+    # expect event1.start.isSame(@event1.start)
+    # .to.be.true
+    
+    # expect event1.end.isSame(@event1.end)
+    # .to.be.true
+
+    expect data        
+    .to.deep.equal { id: "event1", start: '2016-04-02T00:00:00Z', end: '2016-04-04T23:59:59Z', payload: 300, type: 'price' }
+    
     resolve!
 
   specify 'serializeMany', -> new p (resolve,reject) ~>
@@ -103,8 +116,8 @@ describe 'timeEvents', ->
       [ {
         type: 'price',
         id: 'ea1',
-        start: '2016-04-01 00:00:00',
-        end: '2016-04-06 00:00:00',
+        start: '2016-04-01T00:00:00Z',
+        end: '2016-04-06T00:00:00Z',
         payload: 100 } ]
 
     filterQuery2 = new events.Event start: @start.clone().subtract(1,'days'), end: @start.clone().add(8, 'days')
@@ -114,13 +127,13 @@ describe 'timeEvents', ->
     .to.deep.equal do
       [ { type: 'price',
       id: 'ea1',
-      start: '2016-04-01 00:00:00',
-      end: '2016-04-06 00:00:00',
+      start: '2016-04-01T00:00:00Z',
+      end: '2016-04-06T00:00:00Z',
       payload: 100 },
       { type: 'price',
       id: 'ea2',
-      start: '2016-04-06 00:00:00',
-      end: '2016-04-11 00:00:00',
+      start: '2016-04-06T00:00:00Z',
+      end: '2016-04-11T00:00:00Z',
       payload: 125 } ]
 
     filterQuery3 = new events.Event start: @start.clone().add(1,'days'), end: @start.clone().add(17, 'days')
@@ -130,18 +143,18 @@ describe 'timeEvents', ->
     .to.deep.equal do
       [ { type: 'price',
       id: 'ea1',
-      start: '2016-04-01 00:00:00',
-      end: '2016-04-06 00:00:00',
+      start: '2016-04-01T00:00:00Z',
+      end: '2016-04-06T00:00:00Z',
       payload: 100 },
       { type: 'price',
       id: 'ea2',
-      start: '2016-04-06 00:00:00',
-      end: '2016-04-11 00:00:00',
+      start: '2016-04-06T00:00:00Z',
+      end: '2016-04-11T00:00:00Z',
       payload: 125 },
       { type: 'price',
       id: 'ea3',
-      start: '2016-04-11 00:00:00',
-      end: '2016-04-16 00:00:00',
+      start: '2016-04-11T00:00:00Z',
+      end: '2016-04-16T00:00:00Z',
       payload: 150 } ]
 
     eventGrapher.drawEvents 'filter', @events, filterQuery1, res1, filterQuery2, res2, filterQuery3, res3
@@ -205,7 +218,6 @@ describe 'timeEvents', ->
 
     res = targets.clone().subtract(remove).pushm create
     
-    
     eventGrapher.drawEvents 'diff-update-merge', targets, dummies, diff, remove, create, res
     resolve!
         
@@ -217,8 +229,8 @@ describe 'timeEvents', ->
       [
         type: 'price',
         id: 'ea1',
-        start: '2016-04-01 00:00:00',
-        end: '2016-04-06 00:00:00',
+        start: '2016-04-01T00:00:00Z',
+        end: '2016-04-06T00:00:00Z',
         payload: 100
       ]
       
@@ -227,8 +239,8 @@ describe 'timeEvents', ->
       [
         type: 'price',
         id: 'ea3',
-        start: '2016-04-11 00:00:00',
-        end: '2016-04-16 00:00:00',
+        start: '2016-04-11T00:00:00Z',
+        end: '2016-04-16T00:00:00Z',
         payload: 150 
       ]
 
@@ -256,29 +268,29 @@ describe 'timeEvents', ->
       [ {
         type: 'price',
         id: 'ea1-clone',
-        start: '2016-04-03 00:00:00',
-        end: '2016-04-08 00:00:00',
+        start: '2016-04-03T00:00:00Z',
+        end: '2016-04-08T00:00:00Z',
         payload: 100
       }
       {
         type: 'price',
         id: 'ea2-split1',
-        start: '2016-04-08 00:00:00',
-        end: '2016-04-10 12:00:00',
+        start: '2016-04-08T00:00:00Z',
+        end: '2016-04-10T12:00:00Z',
         payload: 125
       },
       {
         type: 'price',
         id: 'ea2-split2',
-        start: '2016-04-10 12:00:00',
-        end: '2016-04-13 00:00:00',
+        start: '2016-04-10T12:00:00Z',
+        end: '2016-04-13T00:00:00Z',
         payload: 125
       }
       {
         type: 'price',
         id: 'ea3-clone',
-        start: '2016-04-13 00:00:00',
-        end: '2016-04-18 00:00:00',
+        start: '2016-04-13T00:00:00Z',
+        end: '2016-04-18T00:00:00Z',
         payload: 150
       }]
 
@@ -394,11 +406,22 @@ describe 'timeEvents', ->
 
     expect res.serialize()
     .to.deep.equal do
-       [ { id: 'event1-0',
-       type: 'price'
-       start: '2016-04-02 00:00:00',
-       end: '2016-04-03 00:00:00',
-       payload: 300 } ]
+       [
+        {
+          id: 'target-0',
+          type: 'price'
+          start: '2016-04-01T00:00:00Z',
+          end: '2016-04-02T23:59:59Z',
+          payload: 300
+        },
+        {
+          id: 'target-1',
+          type: 'price'
+          start: '2016-04-04T00:00:00Z',
+          end: '2016-04-05T23:59:59Z',
+          payload: 300
+        }
+       ]
     
   specify 'subOne2Many', -> new p (resolve,reject) ~>
     
