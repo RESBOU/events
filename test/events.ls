@@ -438,13 +438,13 @@ describe 'timeEvents', ->
       new events.Event do
         id: 'dummy1'
         start: @start.clone().add 1 'days'
-        end: @start.clone().add 3 'days'
+        end: @start.clone().add(3 'days').endOf('day')
         payload: 300
 
       new events.Event do
         id: 'dummy2'
         start: @start.clone().add 7 'days'
-        end: @start.clone().add 13 'days'
+        end: @start.clone().add(13 'days').endOf('day')
         payload: 600
     
     res = crashTarget.subtract crashDummys
@@ -459,7 +459,7 @@ describe 'timeEvents', ->
       end: '2016-04-01T23:59:59Z',
       payload: 300 },
       { id: 'target-1-0',
-      start: '2016-04-04T00:00:00Z',
+      start: '2016-04-05T00:00:00Z',
       end: '2016-04-07T23:59:59Z',
       payload: 300 } ]
 
@@ -503,32 +503,32 @@ describe 'timeEvents', ->
       new events.Event do
         id: 'target1'
         start: @start.clone()
-        end: @start.clone().add 4 'days'
+        end: @start.clone().add 5 'days'
         payload: 150
         
       new events.Event do
         id: 'target2'
-        start: @start.clone().add 5, 'days'
+        start: @start.clone().add 6, 'days'
         end: @start.clone().add 12, 'days'
         payload: 200
         
       new events.Event do
         id: 'target3'
-        start: @start.clone().add 14, 'days'
-        end: @start.clone().add 15, 'days'
+        start: @start.clone().add 15, 'days'
+        end: @start.clone().add 16, 'days'
         payload: 200
 
     crashDummys = new events.MemEvents do
       new events.Event do
         id: 'dummy1'
         start: @start.clone().add 1 'days'
-        end: @start.clone().add 3 'days'
+        end: @start.clone().add(2 'days').endOf('day')
         payload: 300
 
       new events.Event do
         id: 'dummy2'
         start: @start.clone().add 7 'days'
-        end: @start.clone().add 13 'days'
+        end: @start.clone().add(13 'days').endOf('day')
         payload: 600
     
     res = crashTargets.subtract crashDummys
@@ -544,18 +544,16 @@ describe 'timeEvents', ->
       payload: 150 },
       { id: 'target1-1',
       start: '2016-04-04T00:00:00Z',
-      end: '2016-04-05T00:00:00Z',
+      end: '2016-04-06T00:00:00Z',
       payload: 150 },
       { id: 'target2-0',
-      start: '2016-04-06T00:00:00Z',
+      start: '2016-04-07T00:00:00Z',
       end: '2016-04-07T23:59:59Z',
       payload: 200 },
       { id: 'target3',
-      start: '2016-04-15T00:00:00Z',
-      end: '2016-04-16T00:00:00Z',
+      start: '2016-04-16T00:00:00Z',
+      end: '2016-04-17T00:00:00Z',
       payload: 200 } ]
-        
-
 
 
   specify 'change', -> new p (resolve,reject) ~>
