@@ -80,11 +80,12 @@ describe 'timeEvents', ->
     expect event1.end.format()
     .to.be.equal event1.end.format()
 
-    # expect event1.start.isSame(@event1.start)
-    # .to.be.true
+    expect event1.start.format('X')
+    .to.equal @event1.start.format('X')
     
-    # expect event1.end.isSame(@event1.end)
-    # .to.be.true
+    expect event1.end.format('X')
+    .to.equal @event1.end.format('X')
+    
 
     expect data        
     .to.deep.equal { id: "event1", start: '2016-04-02T00:00:00Z', end: '2016-04-04T23:59:59Z', payload: 300, type: 'price' }
@@ -485,8 +486,6 @@ describe 'timeEvents', ->
       end: @start.clone().add 23, 'days'
       payload: 175
       type: 'price'
-
-
     
     dummies = new events.MemEvents [ @event1, dummy1, dummy2, dummy3 ]
     targets = @events.clone()
