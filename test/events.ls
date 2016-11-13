@@ -252,11 +252,14 @@ describe 'timeEvents', ->
       range = event.range!
       range.start.add '2', 'days'
       range.end.add '2', 'days'
+      
       if event.payload isnt 125
         events.pushm event.clone range
       else
+        
         range1 = moment.range range.start, range.center!
         range2 = moment.range range.center!, range.end
+        
         events.pushm do
           event.clone range: range1, id: event.id + '-split1'
           event.clone range: range2, id: event.id + '-split2'
@@ -452,12 +455,12 @@ describe 'timeEvents', ->
     expect res.serialize!
     .to.deep.equal do
       [ { id: 'target-0-0',
-      start: '2016-04-01 00:00:00',
-      end: '2016-04-02 00:00:00',
+      start: '2016-04-01T00:00:00Z',
+      end: '2016-04-01T23:59:59Z',
       payload: 300 },
       { id: 'target-1-0',
-      start: '2016-04-04 00:00:00',
-      end: '2016-04-08 00:00:00',
+      start: '2016-04-04T00:00:00Z',
+      end: '2016-04-07T23:59:59Z',
       payload: 300 } ]
 
   specify 'bookingUpdate', -> new p (resolve,reject) ~>
@@ -536,20 +539,20 @@ describe 'timeEvents', ->
     expect res.serialize!
     .to.deep.equal do
       [ { id: 'target1-0',
-      start: '2016-04-01 00:00:00',
-      end: '2016-04-02 00:00:00',
+      start: '2016-04-01T00:00:00Z',
+      end: '2016-04-01T23:59:59Z',
       payload: 150 },
       { id: 'target1-1',
-      start: '2016-04-04 00:00:00',
-      end: '2016-04-05 00:00:00',
+      start: '2016-04-04T00:00:00Z',
+      end: '2016-04-05T00:00:00Z',
       payload: 150 },
       { id: 'target2-0',
-      start: '2016-04-06 00:00:00',
-      end: '2016-04-08 00:00:00',
+      start: '2016-04-06T00:00:00Z',
+      end: '2016-04-07T23:59:59Z',
       payload: 200 },
       { id: 'target3',
-      start: '2016-04-15 00:00:00',
-      end: '2016-04-16 00:00:00',
+      start: '2016-04-15T00:00:00Z',
+      end: '2016-04-16T00:00:00Z',
       payload: 200 } ]
         
 

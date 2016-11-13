@@ -146,7 +146,7 @@ parseInit = (data) ->
   if data@@ isnt Object then return "wut wut"
   data = {} <<< data
     
-  if data.center then return { start: data.start, end: data.end }
+  if data.center then return { start: moment.utc data.start, end: moment.utc data.end }
     
   if data.range
     data.start = data.range.start
@@ -185,7 +185,7 @@ Event = exports.Event = class Event extends EventLike
 
   # () -> Json
   serialize: ->
-    pick(@, <[type payload id tags]>) <<< mapValues (pick @, <[ start end ]>), (value) -> value.format()
+    pick(@, <[type payload id tags]>) <<< mapValues (pick @, <[ start end ]>), (value) -> value.utc().format()
 
   # () -> String
   toString: ->
