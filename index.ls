@@ -156,7 +156,9 @@ parseInit = (data) ->
   if data.start?@@ in [ Date, String ] then data.start = moment.utc data.start
 
   if data.end?@@ in [ Date, String ] then data.end = moment.utc data.end
-    
+
+  if not data.id then data.id = data.start.format() + " " + data.end.format() + " " + data.type
+        
   return data
 
 Event = exports.Event = class Event extends EventLike
@@ -283,7 +285,11 @@ Events = exports.Events = class Events extends EventLike
     ret = []
     @each (event) -> ret.push cb event
     ret
-                                    
+
+  # () -> Object
+  summary: ->
+    @rawReduce (stats, event) -> (stats or {}) <<< "#{event.type}": (stats?[event.type] or 0) + 1
+  
   # ( (Events, Event) -> Events ) -> Array<any>
   rawReduce: (cb, memo) ->
     @each (event) -> memo := cb memo, event
