@@ -52,7 +52,6 @@ parse = exports.parse = mapValues do
       | Event => something.range!
       | MemEvents => something.range!
       | otherwise => something.range?! or something
-
     
 # ( Events | Array<Event> | Event | void ) -> Array<Event>
   eventCollection: (something) ->
@@ -417,6 +416,7 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
     @
                                                 
   pushm: (...events) ->
+    console.log "WILL PARSE",events
     each parse.eventArray(events), (event) ~>
       if not event then return
       if @events[event.id]? then return
