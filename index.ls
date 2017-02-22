@@ -414,9 +414,8 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
         delete @events[event.id]
         @length--
     @
-                                                
+
   pushm: (...events) ->
-    console.log "WILL PARSE",events
     each parse.eventArray(events), (event) ~>
       if not event then return
       if @events[event.id]? then return
