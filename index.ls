@@ -11,7 +11,7 @@ require! {
 # * Type coercion functions for a more chilled out API
 format = exports.format = -> it.format 'YYYY-MM-DD'
 
-parse = exports.parse = mapValues do
+parse = exports.parse = do
   pattern: ->
     | it?isEvent? => [ it.range!, payload: it.payload ]
     | it?@@ is Object and it.range? => [ parse.range(it.range), omit(it, 'range') ]
@@ -38,32 +38,30 @@ parse = exports.parse = mapValues do
 
   # (Any) -> Array<Event> | Error
   eventArray: ->
+    if it?isEvents? then return it.toArray()
     flattenDeep switch it?@@
       | Array => map it, parse.eventArray
-      | MemEvents => it.toArray()
       | otherwise => [ parse.event it ]
         
   # ( Events | Event | void ) -> Range
   range: (something, def) ->
+    if something?isEvent? or something?isEvents? then return something.range!
+      
     switch something?@@
       | false => def or void
       | Object => moment.range something
       | Array => moment.range something
-      | Event => something.range!
-      | MemEvents => something.range!
       | otherwise => something.range?! or something
     
 # ( Events | Array<Event> | Event | void ) -> Array<Event>
   eventCollection: (something) ->
+    if something?isEvent? then return [ something ]
+    if something?isEvents? then return something.toArray!
+    
     switch something?@@
       | void => []
-      | Event => [ Event ]
-      | Events => Events.toArray()
       | Array => flattenDeep something
       | otherwise => throw 'what is this'
-
-  ( f, name ) -> -> f if it?@@ is Function then it! else it
-    
 
 Matcher = (range, pattern, event) -->
   
@@ -421,7 +419,6 @@ MemEvents = exports.MemEvents = class MemEventsNaive extends Events
       if @events[event.id]? then return
       @events[event.id] = event
       @type[event.type] = true
-
 
       if event.start < @start or not @start then @start = event.start
       if event.end < @end or not @end then @end = event.end
