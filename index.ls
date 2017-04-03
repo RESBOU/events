@@ -11,6 +11,8 @@ require! {
 # * Type coercion functions for a more chilled out API
 format = exports.format = -> it.format 'YYYY-MM-DD'
 
+exports.moment = moment
+
 parse = exports.parse = do
   pattern: ->
     | it?isEvent? => [ it.range!, payload: it.payload ]
@@ -65,8 +67,12 @@ parse = exports.parse = do
 
 Matcher = (range, pattern, event) -->
   
+#  console.log "MATCHER PATTERH", range: range.toDate!, pattern: pattern, event: event.range!toDate!
+
   checkRange = (event) ->
-    if range then return range.contains event.start.clone().add(1) or range.contains event.end.clone().subtract(1) or event.range!.contains range
+    if range
+      res = range.contains event.start.clone().add(1) or range.contains event.end.clone().subtract(1) or event.range!contains range
+      return res
     else return true
 
   checkRangeStrict = (event) -> range.isEqual event.range!
@@ -318,6 +324,7 @@ Events = exports.Events = class Events extends EventLike
       if not collisions.length then return diff
       else
         return diff.popm(collisions).pushm collisions.reduce (res, collision) ->
+          
           [ range, payload ] = event.compare collision
           
           if not range and not payload then return res.pushm collision

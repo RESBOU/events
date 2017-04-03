@@ -217,9 +217,15 @@ describe 'timeEvents', ->
         payload: 175}
 
     diff = targets.diff dummies
-
+    
     [ create, remove ] = targets.update diff
 
+    console.log "CRE"
+    console.log create.summary!
+    console.log create.serialize!
+    console.log "REM"
+    console.log remove.serialize!
+    
     res = targets.clone().subtract(remove).pushm create
     
     eventGrapher.drawEvents 'diff-update-merge', targets, dummies, diff, remove, create, res
