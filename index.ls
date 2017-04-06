@@ -177,7 +177,7 @@ Event = exports.Event = class Event extends EventLike
 
   isSameRange: (event) ->
     event = parse.event event
-    @range!.isSame event.range!
+    @range!isSame event.range!
     
   isSamePayload: (event) ->
     event = parse.event event
